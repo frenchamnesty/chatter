@@ -17,14 +17,19 @@ http.listen(3000, function(){
     console.log('listening on *:3000');
 });
 
+
+var usernames = {};
+
 io.on('connection', function(socket){
-    socket.on('chat message', function(msg){
+
+    socket.on('send', function(msg){
         console.log('message: ' + msg);
-        io.emit('chat message', msg);
+        io.emit('send', msg);
     })
-})
 
 
-io.on('connection', function(socket){
     socket.broadcast.emit('hi');
+
+
 })
+
