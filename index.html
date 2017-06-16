@@ -45,9 +45,9 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    
+    <script src="js/scripts.js"></script>
     <script>
-        $(function () {
+       $(function () {
             var socket = io();
             $('form').submit(function(){
                 socket.emit('send', $('#m').val())
@@ -60,6 +60,6 @@
                 $('#messages').append($('<li>').text(msg));
             });
         });
-    </script>
+    </script> 
   </body>
 </html>
