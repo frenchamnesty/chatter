@@ -14,10 +14,6 @@ io.on('connection', function(socket){
     })
 })
 
-http.listen(3000, function(){
-    console.log('listening on *:3000');
-});
-
 // username obj 
 var usernames = {};
 
@@ -46,7 +42,6 @@ io.on('connection', function(socket){
     });
 
 })
-
 
 http.listen(3000, function(){
     console.log('server connection established. listening on *:3000');
