@@ -1,0 +1,26 @@
+{
+  "name": "chatter",
+  "version": "1.0.0",
+  "description": "a simple chat app made with node and socket.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/frenchamnesty/chatter.git"
+  },
+  "keywords": [
+    "chatter",
+    "chat",
+    "messenger",
+    "node",
+    "socketio"
+  ],
+  "author": "kathleen french",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frenchamnesty/chatter/issues"
+  },
+  "homepage": "https://github.com/frenchamnesty/chatter#readme"
+}
