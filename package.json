@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/frenchamnesty/chatter/issues"
   },
-  "homepage": "https://github.com/frenchamnesty/chatter#readme"
+  "homepage": "https://github.com/frenchamnesty/chatter#readme",
+  "dependencies": {
+    "express": "^4.15.2"
+  }
 }
