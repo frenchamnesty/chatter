@@ -1,7 +1,6 @@
 var socket = io.connect('http://localhost:3000/');
 socket.on('connect', newUser);
-//socket.on('sendMessage', loadMessages);
-//socket.on('updateUsers', updateUserList);
+socket.on('updateUsers', updateUsers);
 
 $(function () {
     $('form').submit(function(){
@@ -34,19 +33,23 @@ function newUser() {
      });
 }
 
+// for displaying in the chat
+function getTime() {
+    var datetime = new Date();
+    var hours = datetime.getHours();
+    var minutes = datetime.getMinutes();
+    var seconds = datetime.getSeconds();
 
-/*
-       $(function () {
-            var socket = io();
-            $('form').submit(function(){
-                socket.emit('sendMessage', $('#m').val())
-                $('#m').val('');
-                return false;
-            });
+    if (hours < 10) hours = '0' + hours;
+    if (minutes < 10) minutes = '0' + minutes;
+    if (seconds < 10) seconds = '0' + seconds;
 
+    return hours + ':' + minutes + ':' + seconds;
+}
 
-            socket.on('sendMessage', function(msg){
-                $('#messages').append($('<li>').text(msg));
-            });
-        });
-*/
+function updateUsers(data) {
+    $('#users').empty();
+    $.each(data, function(key, value) {
+        $('#users').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
+    });
+}
