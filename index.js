@@ -25,9 +25,7 @@ var username
 var clients = {};
 var socketsOfClients = {};
 
-io.on('connection', function(socket){
-    console.log('user has connected');
-    
+io.on('connection', function(socket){    
     // add a user
     socket.on('newUser', function(username){
         socket.username = username;
@@ -37,18 +35,18 @@ io.on('connection', function(socket){
         io.sockets.emit('updateUsers', usernames);
     })
 
+    // send a message
+    socket.on('sendMessage', function(msg){
+        console.log('message: ' + msg);
+        io.emit('sendMessage', msg);
+    })
+
     // disconnect
     socket.on('disconnect', function(){
         delete usernames[socket.username];
         io.sockets.emit('updateusers', username);
         socket.broadcast.emit('updateLog', 'Server', socket.username + ' has left the chat');
     });
-
-    // send a message
-    socket.on('sendMessage', function(msg){
-        console.log('message: ' + msg);
-        io.emit('sendMessage', msg);
-    })
 
 
 

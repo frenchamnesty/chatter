@@ -3,18 +3,16 @@ socket.on('connect', newUser);
 //socket.on('sendMessage', loadMessages);
 //socket.on('updateUsers', updateUserList);
 
-function sendMessage(){
+$(function () {
     $('form').submit(function(){
-        socket.emit('sendMessage', $('#m').val())
+        socket.emit('sendMessage', $('#m').val());
         $('#m').val('');
-        return false
-    })
-
-    $('form').submit(function(msg){
+        return false;
+    });
+    socket.on('sendMessage', function(msg){
         $('#messages').append($('<li>').text(msg));
-    })
-
-}
+    });
+});
 
 function newUser() {
     var usernamePopUp = swal({
@@ -34,16 +32,6 @@ function newUser() {
          swal("Nice!", "Your username is " + inputValue, "success");
          socket.emit('adduser', inputValue);
      });
-
-    // Checks if the user is connected
-    var userConnected;
-
-    if(socket.socket.connected) {
-        userConnected = true;
-    } else {
-        userConnected = false;
-    }
-
 }
 
 
