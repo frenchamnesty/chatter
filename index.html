@@ -45,17 +45,18 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    
     <script>
         $(function () {
             var socket = io();
             $('form').submit(function(){
-                socket.emit('send', $('#m').val())
+                socket.emit('sendMessage', $('#m').val())
                 $('#m').val('');
                 return false;
             });
 
 
-            socket.on('send', function(msg){
+            socket.on('sendMessage', function(msg){
                 $('#messages').append($('<li>').text(msg));
             });
         });
