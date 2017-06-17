@@ -15,20 +15,20 @@ $(function () {
 
 function newUser() {
     var usernamePopUp = swal({
-        title: "Please enter your username",
+        title: "what's your username?",
         type: "input",
         showCancelButton: false,
         closeOnConfirm: false,
         animation: "slide-from-top",
-        inputPlaceholder: "e.g Gavin Belson or Mr.Robot"
+        inputPlaceholder: "...right here"
     }, function(inputValue){
         if (inputValue === false) return false;
         if (inputValue === "") {
-             swal.showInputError("Hey, we need you to enter your username!");
+             swal.showInputError("enter a valid username, dummy");
              return false
          }
          inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("Nice!", "Your username is " + inputValue, "success");
+         swal("Nice!", "cool, start chatting " + inputValue);
          socket.emit('adduser', inputValue);
      });
 }
