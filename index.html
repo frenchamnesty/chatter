@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="author" content="kathleen french">
-    <meta name="viewport" content="width=device-width, intial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Chatter</title>
     <script src="node_modules/sweetalert/dist/sweetalert.min.js"></script>
     <link rel="stylesheet" href="node_modules/sweetalert/dist/sweetalert.css">
@@ -14,26 +14,33 @@
   <body>
     
     <!-- navbar -->
-    <div id="nav-bar"></div>
+    <div id="nav-bar">welcome to chatter</div>
 
     <!-- body --> 
     <div class="body-wrap">
 
         <!-- users prompt -->
         <div id="users">
+          <h3>in the chat...</h3>
+          <ul id="user-list"></ul>
         </div>
 
 
         <!-- chat log --> 
 
-        <div id="chat-log">
+        <div id="chatlog-wrap">
             <div id="chat-notification"></div>
 
-            <ul id="messages"></ul>
+            <div id="messages-wrap">
+              this is the chatlog
+              <div id="log"></div>
+             
+            </div>
 
+            <ul id="#messages"></ul>
             <!-- chat input -->
 
-            <form action="">
+            <form action="">input messages here right?
                 <input id="m" autocomplete="off" /><button>Send</button>
             </form>
 

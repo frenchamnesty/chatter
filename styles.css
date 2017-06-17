@@ -15,6 +15,15 @@ body {
     font: 13px "Roboto Mono", "monospace"; 
 }
 
+/*
+.body-wrap {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+}
+*/
+
 form { 
     background: #000; 
     padding: 3px; 
@@ -47,7 +56,3 @@ form button {
 #messages li { padding: 5px 10px; }
 
 #messages li:nth-child(odd) { background: #eee; }
-
-ul#messages {
-    list-style: none !important;
-}
