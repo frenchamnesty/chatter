@@ -1,9 +1,19 @@
+
+// global params
 var express = require('express');
 var app = express();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
+var server = require('http').createServer(app);
+var io = require('socket.io').listen(server);
+var port = 3000;
 var path = require('path');
+var uid = require('uid');
 
+// server
+server.listen(port, function(){
+    console.log('server connection estabslihed on port:3000')
+});
+
+// directories
 app.use(express.static(path.join(__dirname, '/')));
 
 
@@ -11,33 +21,35 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
-// server
-
-http.listen(3000, function(){
-    console.log('server connection established. listening on *:3000');
-});
-
 // user list obj 
-var usernames = {};
+var users = {};
 
 // user channels obj
-var userSockets = {};
+//var chatterUsers = {};
 
-io.on('connection', function(socket){    
+/*
+io.on('connection', function(socket){ 
 
-// add user + set username
+    // on connect - establish the username
+
+    socket.on('connect', function(data){
+        connect(socket, data);
+    })   
+
+    // add user + set username
     socket.on('set username', function(username){
         if(usernames[username] === undefined){
             usernames[username] = socket.id;
             userSockets[socket.id] = username;
             usernameAvailable(socket.id, username);
             userJoined(username);
+            console.log('usernames: ' + usernames);
             socket.emit('newUser', username);
             //socket.broadcast.emit('updateLogs', username + ' has joined the chat');
             socket.emit('updateUsers', usernames);
             console.log('update users if firing from the index');
-       /* } else {
-            usernameInUse(socket.id, username);  */
+        } else {
+            usernameInUse(socket.id, username);  
         }
     })
 
@@ -48,6 +60,43 @@ io.on('connection', function(socket){
         io.sockets.emit('updateusers', usernames);
         socket.broadcast.emit('updateLogs', username + ' has left the chat');
     });
+
+    socket.on('chatmessage', function(data){
+        chatmessage(socket, data);
+    })
+
+})
+
+*/
+
+/*
+
+function userJoined(username){
+    Object.keys(userSockets).forEach(function(socketId){
+        io.sockets.sockets[socketId].emit('userJoined', { "username" : username });
+    })
+}
+
+function userLeft(username){
+    io.sockets.emit('userleft', { "username" : username });
+}
+
+function usernameAvailable(socketId, username){
+    setTimeout(function(){
+        console.log(username + ' has joined the chat. their individual chat id is: ' + socketId);
+
+        io.sockets.sockets[socketId].emit('welcome', { "username" : username, "currentusers" : JSON.stringify(Object.keys(usernames)) });
+    }, 500)
+}
+*/
+
+/*
+function usernameInUse(socketId, username){
+    setTimeout(function(){
+        io.sockets.sockets[socketId].emit('error', { "usernameTaken" : true })
+    })
+}
+*/
 
 
 /*
@@ -93,35 +142,149 @@ io.on('connection', function(socket){
         socket.broadcast.emit('updateLog', 'Server', socket.username + ' has left the chat');
     });
   */
+    /*
+    var usernamePopUp = swal({
+        title: "what's your username?",
+        type: "input",
+        showCancelButton: false,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "...right here"
+    }, function(inputValue){
+        if (inputValue === false) return false;
+
+        if(inputValue === ""){
+            swal.showInputError("enter a valid username");
+            return false;
+        }
+
+        inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
+         swal("## good2go ##!", "cool, start chatting " + inputValue);
+
+        data.username = inputValue;
+        data.userId = uid(10);
+        
+        chatterUsers[socket.id] = data;
+
+        socket.emit('ready', { userId: data.userId, username: data.username });
+
+        subscribe(socket, { room: 'everyone' });
+
+        socket.emit('roomsList', { rooms: getRooms() });
+
+        socket.emit('userList', { users: getUsers() });
+
+         console.log('user data saved: ' + 'username: ' + data.username + ' user id: ' + data.userId)
 
 
-})
+         $('#user-list').append('<li>').text(inputValue);
+     });
+     */
 
-function userJoined(username){
-    Object.keys(userSockets).forEach(function(socketId){
-        io.sockets.sockets[socketId].emit('userJoined', { "username" : username });
+function disconnect(socket, data){
+    var rooms = io.sockets.manager.roomClients[socket.id];
+
+    for(var room in rooms){
+        if(room && rooms[room]){
+            unsubscribe(socket, { room: room.replace('/','')});
+        }
+    }
+    delete usernames[socket.id]
+}
+
+function chatmessage(socket,data){
+    var rooms = getRooms();
+
+    if (rooms.indexOf('/' + data.room) < 0){
+        socket.broadcast.emit('addroom', { room: data.room });
+    }
+
+    socket.join(data.room);
+
+    updatePresence(data.room, socket, 'online');
+
+    socket.emit('chatterUsers', { room: data.room, clients: getUsersInRoom(socket.id, data.room)})
+}
+
+function getRooms(){
+    return Object.keys(io.sockets.manager.rooms);
+}
+
+function authenticate(data, callback){
+    var userData = data.user;
+    var uid = uid(10);
+    var result = false;
+
+    if(uid.update(JSON.stringify(userData), 'utf8').digest('hex') === data.hash){
+        result = true;
+    }
+
+    return callback(null, result);
+}
+
+function postAuth(socket, data){
+    var userData = data.user;
+
+    if (data.username === undefined || data.username.trim().length === 0){
+        userData.username = userData.name;
+    } else {
+        userData.username = data.username;
+    }
+
+    userData.username = userData.username.trim().slice(0, 40).replace(/[\u202e\u034f\u200f\u202a\u202b\u202c\u202d\u202e\u2060\uFEFF]/g, '');
+
+    socket.user = userData;
+}
+
+function getUsers(socketId, user){
+    var socketIds = io.sockets.manager.users['/' + user];
+    var users = [];
+
+    if (socketIds && socketIds.length > 0){
+        socketsCount = socketIds.length;
+
+        for (var i = 0, len = socketIds.length; i < len; i++){
+            if (socketIds[i] !== socketId){
+                users.push(userSockets[socketIds[i]])
+            }
+        }
+    }
+    return users
+}
+
+
+function connect(socket, data){
+    // generate user id
+    data.userId = uid();
+
+    // compile users on individual thread
+    users[socket.id] = data;
+
+    // fire ready function to store user id
+
+    socket.emit('ready', { 
+        userId: data.userId 
+    });
+
+    // update user list
+    socket.emit('userList', { 
+        users: getUsers() 
     })
+
 }
 
-function userLeft(username){
-    io.sockets.emit('userleft', { "username" : username });
+function updatePresence(room, socket, state){
+    room = room.replace('/', '');
+
+    socket.broadcast.to(room).emit('presence', { client: userSockets[socket.id], state: state, room: room})
 }
 
-function usernameAvailable(socketId, username){
-    setTimeout(function(){
-        console.log(username + ' has joined the chat. their individual chat id is: ' + socketId);
+io.on('connection', function(socket){ 
 
-        io.sockets.sockets[socketId].emit('welcome', { "username" : username, "currentusers" : JSON.stringify(Object.keys(usernames)) });
-    }, 500)
-}
+    // on connect - establish the user info
 
+   socket.on('connect', function(data){
+        connect(socket, data)
+    });
 
-/*
-function usernameInUse(socketId, username){
-    setTimeout(function(){
-        io.sockets.sockets[socketId].emit('error', { "usernameTaken" : true })
-    })
-}
-*/
-
-
+});
