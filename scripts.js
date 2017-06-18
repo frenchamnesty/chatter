@@ -1,82 +1,3 @@
-/*
-
-function setHeight(){
-    $('.slimScrollDiv').height('603');
-    $('.slimScrollDiv').css('overflow', 'visible')
-}
-
-function time(){
-    $('time').each(function(){
-        $(this).text($.timeago($(this).attr('title')))
-    })
-}
-
-socket.on('message', function(data){
-    addMessage(data['message'], data['init'], new Date().toISOString(), false)
-    console.log(data);
-})
-/*
-
-// for displaying in the chat
-
-
-function updateUsers(thisUser) {
-    $('#user-list').empty();
-    $.each(thisUser, function(key, value) {
-        $('#user-list').append('<li class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
-    });
-}
-*/
-    /*
-    $('#user-list').append('<li><i class="fa fa-user" aria-hidden="true"></i>' + usernames.thisUser + '</li>');
-    console.log('this user update users: ' + thisUser);
-    
-
-    $('#user-list').append($('<option></option>').val(username).html(username));
-    if (notify && (thisUser !== username) && (thisUser !== 'everyone')){
-        $('#user-list').append('<span class="admin">==>' + username + " just joined <==<br/>")
-    }
-    */
-
-/*
-function updateLog(username){
-    Object.keys(socketsOf)
-    $('#log').empty();
-    $.each(username, function(key, value){
-        $('log').append('<li class="notice">')
-    })
-}
-
-
-function sendMessage() {
-    var targetUser = $('#users').val();
-    $('form').submit(function(){
-        socket.emit('sendMessage', 
-         {
-                  "userSockets": true,
-                  "source": "",
-                  "message": $('input#msg').val(),
-                  "target": trgtUser
-                });
-	    $('#m').val("");
-    })
-}
-
-function addMessage(msg){
-    var html;
-    if (msg.target == "everyone") {
-        html = "<span class='to-all'>" + msg.source + " : " + msg.message + "</span><br/>"
-    } else {
-        // private message
-        html = "<span class='private'>" + msg.source + " (private) : " + msg.message + "</span><br/>"
-    }
-  $('#log').append(html);
-}
-
-*/
-
-// ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT!!!!!!!!!!!
-
 // global params
 
 var socket = io.connect('http://localhost:3000');
@@ -85,6 +6,7 @@ var username = null;
 var currentRoom = null;
 var serverDisplayName = 'Server';
 
+// prob will do away with this >> 
 var markup = {
     room: [
         '<li data-roomId="${room}">',
@@ -98,14 +20,9 @@ var markup = {
         '<div class="typing"></div>',
         '</li>'
     ].join(""),
-
-    message: [
-        '<li class="message">',
-        '<div class="sender">${sender}: </div><div class="text">${text}</div><div class="time">${time}</div>',
-        '</li>'
-    ].join("")
 };
 
+// bind dom events to handler/etc functions
 function bindDOMEvents(){
     $('.chat-input input').on('keydown', function(e){
         var key = e.which || e.keyCode;
@@ -132,34 +49,6 @@ function bindDOMEvents(){
     });
 }
 
-/*
-function bindSocketEvents(){
-    socket.on('connect', function(){
-        socket.emit('connect', {            username: username 
-        })
-    })
-
-    socket.on('ready', function(data){
-        $('#log').animate({ 'opacity': 0 }, 200, function(){
-            $(this).hide();
-            $('input#m').focus();
-        })
-        
-        userId = data.userId;
-
-    })
-
-    socket.on('userList', function(data){
-
-        for(var i = 0, len = data.users.length; i < len; i++){
-            if (data.users[i] !== ''){
-                addUser(data.users[i], false)
-            }
-        }
-    })
-    */
-
-
 function removeUser(user, announced){
     $('user-list ul li[data-userId="' + user.userId + '"]').remove();
 
@@ -182,6 +71,7 @@ function getTime() {
     return hours + ':' + minutes + ':' + seconds;
 }
 
+// add user 
 function addUser(data){
     var usernamePopUp = swal({
         title: "what's your username?",
@@ -219,34 +109,11 @@ function addUser(data){
         })
 
         $('#user-list').append('<li class="username" key=' + userId + '>' + username + '</li>' );
-        
-        //socket.emit('ready', { userId: data.userId, username: data.username });
 
-        //
-
-       // subscribe(socket, { room: 'everyone' });
-
-        //socket.emit('roomsList', { rooms: getRooms() });
-
-         //console.log('user data saved: ' + 'username: ' + data.username + ' user id: ' + data.userId)
      });
-
-    // 
-    /*
-    var $html = $.template(template.user, user);
-
-    if(self){
-        $html.addClass('self');
-    }
-
-    if(announce){
-        insertMessage(serverDisplayName, user.username + ' has joined the chat...', true, false, true);
-    }
-
-    $html.appendTo('#user-list');
-    */
 }
 
+// handle message input
 function handleMessage(){
     var message = $('.chat-input input').val().trim();
     console.log('handle messsage is firing');
@@ -268,8 +135,10 @@ function handleMessage(){
     }
 }
 
+// add message to logs
 function addMessage(sender, message, showTime, isSelf){
 
+    // variable for html structure
     var html = [
 				'<li>',
 					'<span class="fl sender">${sender} [<span class="fr time">${time}</span>]: </span><span class="fl text">${text}</span>',
@@ -281,39 +150,17 @@ function addMessage(sender, message, showTime, isSelf){
         text: message,
         time: showTime ? getTime() : ''
     })
-    console.log('add message firing');
 
-/*
-    var time = showTime ? getTime() : '';
-
-    console.log('sender: ' + sender);
-    console.log('message: ' + message);
-    console.log('time: ' + time);
-*/
+    // msg is from self?
     if(isSelf){
         $('#messages-log ul').addClass('message-sender');
 
         console.log('is self?');
     }
 
-/*
-    $('#messages-log ul').append(					'<li><span class="sender">${sender}: </span><span class="message">${message}</span><span class="fr time">${time}</span></li>');
-*/
-
+    // append message to logs
     $('#messages-log ul').append($msgTemplate);
-
-   // $msgTemplate.appendTo('messages-log ul');
-
-    $('#messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100)
-
-    //$html.appendTo('#messages-log ul');
-
-    console.log('appending?');
-
-    //$('.messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100);
-
-
-   // $('#messages-log').animate({ scrollTop: $('#messages-log ul').height() }, 100)
+    $('#messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100);
 }
 
 function updateUsers(usernames){
@@ -323,43 +170,16 @@ function updateUsers(usernames){
     });
 }  
 
-/*
-function connect(){
-    $('log').html('connecting...');
-}
-*/
-
-//socket.on('connnect', connect);
-
 socket.on('connect', addUser);
-
-//socket.on('ready', addUser);
-
 socket.on('userList', updateUsers);
-
-/*
-socket.on('chatmessage', function(data){
-    console.log('chat message is firing from socket on');
-
-
-    var username = data.user.username;
-    var message = data.message;
-
-    addMessage(username, message, true, false, false);
-
-});
-*/
-
-/*
-socket.on('presence', function(data){
-    if(data.state === 'online'){
-        addUser(data.user, true);
-    } else if (data.state === 'offline'){
-        removeUser(data.user, true);
-    }
-})
-*/
 
 $(function(){
     bindDOMEvents();
 })
+
+
+
+
+// notes: 
+
+// ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react

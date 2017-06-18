@@ -28,30 +28,6 @@ var users = {};
 //var chatterUsers = {};
 
 /*
-io.on('connection', function(socket){ 
-
-    // on connect - establish the username
-
-    socket.on('connect', function(data){
-        connect(socket, data);
-    })   
-
-    // add user + set username
-    socket.on('set username', function(username){
-        if(usernames[username] === undefined){
-            usernames[username] = socket.id;
-            userSockets[socket.id] = username;
-            usernameAvailable(socket.id, username);
-            userJoined(username);
-            console.log('usernames: ' + usernames);
-            socket.emit('newUser', username);
-            //socket.broadcast.emit('updateLogs', username + ' has joined the chat');
-            socket.emit('updateUsers', usernames);
-            console.log('update users if firing from the index');
-        } else {
-            usernameInUse(socket.id, username);  
-        }
-    })
 
     // disconnect
     socket.on('disconnect', function(){
@@ -60,10 +36,6 @@ io.on('connection', function(socket){
         io.sockets.emit('updateusers', usernames);
         socket.broadcast.emit('updateLogs', username + ' has left the chat');
     });
-
-    socket.on('chatmessage', function(data){
-        chatmessage(socket, data);
-    })
 
 })
 
@@ -100,14 +72,6 @@ function usernameInUse(socketId, username){
 
 
 /*
-    // add a user
-    socket.on('newUser', function(username){
-        socket.username = username;
-        usernames[username] = username;
-        socket.emit('updateLog', 'Server', "you're in!");
-        socket.boradcast.emit('updateLog', 'Server', username + ' has joined the chat');
-        io.sockets.emit('updateUsers', usernames);
-    })
 
     // send a message
     socket.on('sendMessage', function(msg){
@@ -133,52 +97,7 @@ function usernameInUse(socketId, username){
         console.log('message: ' + msg);
         io.emit('sendMessage', socket.username, msg);
     })
-  
 
-    // disconnect
-    socket.on('disconnect', function(){
-        delete usernames[socket.username];
-        io.sockets.emit('updateusers', username);
-        socket.broadcast.emit('updateLog', 'Server', socket.username + ' has left the chat');
-    });
-  */
-    /*
-    var usernamePopUp = swal({
-        title: "what's your username?",
-        type: "input",
-        showCancelButton: false,
-        closeOnConfirm: false,
-        animation: "slide-from-top",
-        inputPlaceholder: "...right here"
-    }, function(inputValue){
-        if (inputValue === false) return false;
-
-        if(inputValue === ""){
-            swal.showInputError("enter a valid username");
-            return false;
-        }
-
-        inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("## good2go ##!", "cool, start chatting " + inputValue);
-
-        data.username = inputValue;
-        data.userId = uid(10);
-        
-        chatterUsers[socket.id] = data;
-
-        socket.emit('ready', { userId: data.userId, username: data.username });
-
-        subscribe(socket, { room: 'everyone' });
-
-        socket.emit('roomsList', { rooms: getRooms() });
-
-        socket.emit('userList', { users: getUsers() });
-
-         console.log('user data saved: ' + 'username: ' + data.username + ' user id: ' + data.userId)
-
-
-         $('#user-list').append('<li>').text(inputValue);
-     });
      */
 
 function disconnect(socket, data){
@@ -190,32 +109,6 @@ function disconnect(socket, data){
         }
     }
     delete usernames[socket.id]
-}
-
-function authenticate(data, callback){
-    var userData = data.user;
-    var uid = uid(10);
-    var result = false;
-
-    if(uid.update(JSON.stringify(userData), 'utf8').digest('hex') === data.hash){
-        result = true;
-    }
-
-    return callback(null, result);
-}
-
-function postAuth(socket, data){
-    var userData = data.user;
-
-    if (data.username === undefined || data.username.trim().length === 0){
-        userData.username = userData.name;
-    } else {
-        userData.username = data.username;
-    }
-
-    userData.username = userData.username.trim().slice(0, 40).replace(/[\u202e\u034f\u200f\u202a\u202b\u202c\u202d\u202e\u2060\uFEFF]/g, '');
-
-    socket.user = userData;
 }
 
 // ON CONNECTION >>>>>>>>>>>>>>>
@@ -264,7 +157,9 @@ function connect(socket, data){
 
 function chatmessage(socket, data){
     console.log('chat message index.js firing')
+
     socket.broadcast.to(data.room).emit('chatmessage', { user: users[socket.id], message: data.message })
+
     //, room: data.room
 }
 
