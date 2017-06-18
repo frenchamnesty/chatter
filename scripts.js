@@ -1,19 +1,4 @@
-
-
 /*
-$(function() {
-    messageLog = $('#m');
-    sendBtn = $('#send');
-    bindButton();
-    window.setInterval(time, 1000*10);
-    $('#chatMessages').slimScroll({ height: '600px'});
-    sendButton.click(function() {sendMessage(); });
-    setHeight();
-    $('#m').keypress(function(e){
-        if (e.which === 13) { sendMessage();}
-    })
-
-})
 
 function setHeight(){
     $('.slimScrollDiv').height('603');
@@ -31,63 +16,9 @@ socket.on('message', function(data){
     console.log(data);
 })
 /*
-$(function () {
-    $('form').submit(function(){
-        socket.emit('sendMessage', $('#m').val());
-        $('#m').val('');
-        return false;
-    });
-    socket.on('sendMessage', function(msg){
-        $('<span class="message">' + '[' + getTime() + '] ' + 'strong>' + username + ':</strong> ' + msg + '</span><br/>').insertAfter($('#log'))
-       // $('#messages').append($('<li>').text(msg));
-    });
-});
-
-
-
-// need update logs
-
-function newUser() {
-    var usernamePopUp = swal({
-        title: "what's your username?",
-        type: "input",
-        showCancelButton: false,
-        closeOnConfirm: false,
-        animation: "slide-from-top",
-        inputPlaceholder: "...right here"
-    }, function(inputValue){
-        if (inputValue === false) return false;
-
-        if (inputValue === "") {
-             swal.showInputError("enter a valid username, dummy");
-             return false
-         }
-
-         inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("## good2go ##!", "cool, start chatting " + inputValue);
-         thisUser = inputValue;
-
-         socket.emit('set username', thisUser);
-
-         console.log('this user: ' + thisUser)
-         console.log('username set as: ' + inputValue)
-         //$('#user-list').append('<li>').text(inputValue);
-     });
-}
 
 // for displaying in the chat
-function getTime() {
-    var datetime = new Date();
-    var hours = datetime.getHours();
-    var minutes = datetime.getMinutes();
-    var seconds = datetime.getSeconds();
 
-    if (hours < 10) hours = '0' + hours;
-    if (minutes < 10) minutes = '0' + minutes;
-    if (seconds < 10) seconds = '0' + seconds;
-
-    return hours + ':' + minutes + ':' + seconds;
-}
 
 function updateUsers(thisUser) {
     $('#user-list').empty();
@@ -116,18 +47,6 @@ function updateLog(username){
     })
 }
 
-function loadMessage(username, msg){
-    $('<span class="message">' + '[' + getTime() + '] ' + 'strong>' + username + ':</strong> ' + msg + '</span><br/>').insertAfter($('#log'))
-}
-
-
-
-function updateUsers(username, notify){
-    $('select#users').append($('<option></option>').val(username).html(username));
-    if (notify && (thisUser !== username) && (thisUser !== 'everyone')){
-        $('#user-list').append('<span class="admin">==>' + username + " just joined <==<br/>")
-    }
-}
 
 function sendMessage() {
     var targetUser = $('#users').val();
@@ -156,22 +75,17 @@ function addMessage(msg){
 
 */
 
-//socket.on('connect', newUser);
-//socket.on('updateLog', loadMessage)
-//socket.on('updateUsers', updateUsers);
-
-
 // ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT!!!!!!!!!!!
 
 // global params
-//var socket = io.connect('http://localhost:3000');
-var socket = null;
+
+var socket = io.connect('http://localhost:3000');
 var userId = null;
 var username = null;
 var currentRoom = null;
 var serverDisplayName = 'Server';
 
-var template = {
+var markup = {
     room: [
         '<li data-roomId="${room}">',
         '<span class="icon"></span> ${room}',
@@ -193,7 +107,7 @@ var template = {
 };
 
 function bindDOMEvents(){
-    $('input#m').on('keydown', function(e){
+    $('.chat-input input').on('keydown', function(e){
         var key = e.which || e.keyCode;
 
         if(key == 13) {
@@ -201,7 +115,11 @@ function bindDOMEvents(){
         }
     })
 
-    $('#log').on('scroll', function(){
+    $('.chat-submit button').on('click', function(){
+        handleMessage();
+    })
+
+    $('#messages-log ul').on('scroll', function(){
         var self = this;
 
         window.setTimeout(function(){
@@ -250,22 +168,6 @@ function removeUser(user, announced){
     }
 }
 
-function insertMessage(sender, message, showTime, isSelf, room){
-    var $html = $.template(template.message, {
-        sender: sender, 
-        text: message, 
-        time: showTime ? getTime() : ''
-    });
-
-    if(isSelf){
-        $html.find('.sender').css('color', 'red')
-    }
-
-    $html.appendTo('#log');
-
-    $('#log').animate({ scrollTop: $('#log').height() }, 100)
-}
-
 // for displaying in the chat
 function getTime() {
     var datetime = new Date();
@@ -280,23 +182,7 @@ function getTime() {
     return hours + ':' + minutes + ':' + seconds;
 }
 
-function handleMessage(){
-    var message = $('input#m').val().trim();
-
-    if(message){
-        socket.emit('chatmessage', {
-            message: message,
-            room: currentRoom
-        });
-
-        insertMessage(username, message, true, true);
-    } else {
-        //
-    }
-}
-
 function addUser(data){
-
     var usernamePopUp = swal({
         title: "what's your username?",
         type: "input",
@@ -326,14 +212,14 @@ function addUser(data){
 
             $('#log').animate({ 'opacity': 0}, 200, function(){
                 $(this).hide();
-                $('input#m').focus();
+                $('#m').focus();
             })
 
             userId = data.userId;
         })
 
         $('#user-list').append('<li class="username" key=' + userId + '>' + username + '</li>' );
-
+        
         //socket.emit('ready', { userId: data.userId, username: data.username });
 
         //
@@ -361,20 +247,87 @@ function addUser(data){
     */
 }
 
+function handleMessage(){
+    var message = $('.chat-input input').val().trim();
+    console.log('handle messsage is firing');
+
+    if(message){
+
+        socket.emit('chatmessage', {
+            message: message
+        });
+        
+        console.log('handle message should go through, msg: ' + message);
+                    
+        addMessage(username, message, true, true);
+        
+        $('.chat-input input').val('');
+    
+    } else {
+        console.log('chat did not go through');
+    }
+}
+
+function addMessage(sender, message, showTime, isSelf){
+
+    var html = [
+				'<li>',
+					'<div class="fl sender">${sender}: </div><div class="fl text">${text}</div><div class="fr time">${time}</div>',
+				'</li>'
+			].join("");
+
+    var $msgTemplate = $.tmpl(html, {
+        sender: sender,
+        text: message,
+        time: showTime ? getTime() : ''
+    })
+    console.log('add message firing');
+
+/*
+    var time = showTime ? getTime() : '';
+
+    console.log('sender: ' + sender);
+    console.log('message: ' + message);
+    console.log('time: ' + time);
+*/
+    if(isSelf){
+        $('#messages-log ul').addClass('message-sender');
+
+        console.log('is self?');
+    }
+
+/*
+    $('#messages-log ul').append(					'<li><div class="sender">${sender}: </div><div class="message">${message}</div><div class="fr time">${time}</div></li>');
+*/
+
+    $('#messages-log ul').append($msgTemplate);
+
+   // $msgTemplate.appendTo('messages-log ul');
+
+    $('#messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100)
+
+    //$html.appendTo('#messages-log ul');
+
+    console.log('appending?');
+
+    //$('.messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100);
+
+
+   // $('#messages-log').animate({ scrollTop: $('#messages-log ul').height() }, 100)
+}
+
 function updateUsers(usernames){
     $('#user-list').empty();
-    $.each(usernames, function(key, value){
+    $.each(users, function(key, value){
         $('#user-list').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
     });
 }  
 
+/*
 function connect(){
     $('log').html('connecting...');
-
-    //bindSocketEvents();
 }
-
-var socket = io.connect('http://localhost:3000');
+*/
 
 //socket.on('connnect', connect);
 
@@ -384,6 +337,29 @@ socket.on('connect', addUser);
 
 socket.on('userList', updateUsers);
 
-//socket.on('connect', newUser);
-//socket.on('updateLog', loadMessage)
-//socket.on('updateUsers', updateUsers);
+/*
+socket.on('chatmessage', function(data){
+    console.log('chat message is firing from socket on');
+
+
+    var username = data.user.username;
+    var message = data.message;
+
+    addMessage(username, message, true, false, false);
+
+});
+*/
+
+/*
+socket.on('presence', function(data){
+    if(data.state === 'online'){
+        addUser(data.user, true);
+    } else if (data.state === 'offline'){
+        removeUser(data.user, true);
+    }
+})
+*/
+
+$(function(){
+    bindDOMEvents();
+})

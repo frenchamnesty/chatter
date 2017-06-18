@@ -19,8 +19,11 @@
     <!-- body --> 
     <div class="body-wrap">
 
-        <!-- users prompt -->
+        <br/>
+
+        <!-- users list -->
         <div id="users">
+          <br/>
           <h3>in the chat...</h3>
           <ul id="user-list"></ul>
         </div>
@@ -29,29 +32,51 @@
         <!-- chat log --> 
 
         <div id="chatlog-wrap">
+
+            <!-- notifications -->
             <div id="chat-notification"></div>
 
+            <!-- messages window --> 
             <div id="messages-wrap">
-              this is the chatlog
-              <div id="log"></div>
-             
+              <br/>
+              <h3>this is the chatlog</h3>
+              <br/>
+              
+              <!-- messages load here -->
+              <div id="messages-log">
+                <ul></ul>
+              </div>
             </div>
 
-            <ul id="#messages"></ul>
             <!-- chat input -->
 
-            <form action="">input messages here right?
-                <input id="m" autocomplete="off" /><button>Send</button>
-            </form>
+            <div class="chat-bottom">
+              <div class="chat-input">
+                <input type="text" placeholder="enter message here..." autocomplete="off" />
+              </div>
+              <div class="chat-submit">
+                <button>Send</button>
+              </div>
+            </div>
 
+                  <!--
+                  <form action="">input messages here right?
+                      <input id="m" autocomplete="off" />
+                      
+                      <button id="send-btn">Send</button>
+                  </form>
+                  -->
+
+            <!-- end of chatlog wrap -->
         </div>
 
-
+        <!-- end of body wrap -->
     </div>
 
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
     <script src="scripts.js"></script>
   </body>
 </html>

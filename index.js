@@ -192,24 +192,6 @@ function disconnect(socket, data){
     delete usernames[socket.id]
 }
 
-function chatmessage(socket,data){
-    var rooms = getRooms();
-
-    if (rooms.indexOf('/' + data.room) < 0){
-        socket.broadcast.emit('addroom', { room: data.room });
-    }
-
-    socket.join(data.room);
-
-    updatePresence(data.room, socket, 'online');
-
-    socket.emit('chatterUsers', { room: data.room, clients: getUsersInRoom(socket.id, data.room)})
-}
-
-function getRooms(){
-    return Object.keys(io.sockets.manager.rooms);
-}
-
 function authenticate(data, callback){
     var userData = data.user;
     var uid = uid(10);
@@ -236,22 +218,27 @@ function postAuth(socket, data){
     socket.user = userData;
 }
 
-function getUsers(socketId, user){
-    var socketIds = io.sockets.manager.users['/' + user];
-    var users = [];
+// ON CONNECTION >>>>>>>>>>>>>>>
 
-    if (socketIds && socketIds.length > 0){
-        socketsCount = socketIds.length;
+io.on('connection', function(socket){ 
 
-        for (var i = 0, len = socketIds.length; i < len; i++){
-            if (socketIds[i] !== socketId){
-                users.push(userSockets[socketIds[i]])
-            }
-        }
-    }
-    return users
-}
+    // on connect - establish the user info
 
+   socket.on('connect', function(data){
+        connect(socket, data);
+    });
+
+    socket.on('chatmessage', function(data){
+        chatmessage(socket, data);
+    });
+
+   // socket.on('subscribe', function(data){
+   //     subscribe(socket, data);
+   // })
+
+});
+
+// connect function
 
 function connect(socket, data){
     // generate user id
@@ -273,18 +260,82 @@ function connect(socket, data){
 
 }
 
+// chat message function 
+
+function chatmessage(socket, data){
+    console.log('chat message index.js firing')
+    socket.broadcast.to(data.room).emit('chatmessage', { user: users[socket.id], message: data.message })
+    //, room: data.room
+}
+
+// get rooms function
+
+function getRooms(){
+    return Object.keys(io.sockets.manager.rooms);
+}
+
+// subscription function 
+
+function subscribe(socket, data){
+    var rooms = getRooms();
+
+    if(rooms.indexOf('/' + data.room) < 0){
+        socket.broadcast.emit('addroom', { room: data.room });
+    }
+
+    socket.join(data.room);
+
+    updatePresence(data.room, socket, 'online');
+
+    socket.emit('roomUsers', { room: data.room, users: getUsersInRoom(socket.id, data.room )});
+}
+
+// get users in room function 
+
+function getUsersInRoom(socketId, room){
+	// get array of socket ids in this room
+	var socketIds = io.sockets.manager.rooms['/' + room];
+	var userSockets = [];
+	
+	if(socketIds && socketIds.length > 0){
+		socketsCount = socketIds.lenght;
+		
+		// push every client to the result array
+		for(var i = 0, len = socketIds.length; i < len; i++){
+			
+			// check if the socket is not the requesting
+			// socket
+			if(socketIds[i] != socketId){
+				userSockets.push(users[socketIds[i]]);
+			}
+		}
+	}
+	
+	return socketIds;
+}
+
+// get users function 
+
+function getUsers(socketId, user){
+    var socketIds = io.sockets.manager.users['/' + user];
+    var users = [];
+
+    if (socketIds && socketIds.length > 0){
+        socketsCount = socketIds.length;
+
+        for (var i = 0, len = socketIds.length; i < len; i++){
+            if (socketIds[i] !== socketId){
+                users.push(userSockets[socketIds[i]])
+            }
+        }
+    }
+    return users
+}
+
+// update presence function 
+
 function updatePresence(room, socket, state){
     room = room.replace('/', '');
 
-    socket.broadcast.to(room).emit('presence', { client: userSockets[socket.id], state: state, room: room})
+    socket.broadcast.to(room).emit('presence', { user: userSockets[socket.id], state: state, room: room})
 }
-
-io.on('connection', function(socket){ 
-
-    // on connect - establish the user info
-
-   socket.on('connect', function(data){
-        connect(socket, data)
-    });
-
-});
