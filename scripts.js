@@ -141,7 +141,7 @@ function addMessage(sender, message, showTime, isSelf){
     // variable for html structure
     var html = [
 				'<li>',
-					'<span class="fl sender">${sender} [<span class="fr time">${time}</span>]: </span><span class="fl text">${text}</span>',
+					'<span id="sender">${sender} </span>[<span class="fr time">${time}</span>]: <span class="fl text">${text}</span>',
 				'</li>'
 			].join("");
 
