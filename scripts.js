@@ -272,7 +272,7 @@ function addMessage(sender, message, showTime, isSelf){
 
     var html = [
 				'<li>',
-					'<div class="fl sender">${sender}: </div><div class="fl text">${text}</div><div class="fr time">${time}</div>',
+					'<span class="fl sender">${sender} [<span class="fr time">${time}</span>]: </span><span class="fl text">${text}</span>',
 				'</li>'
 			].join("");
 
@@ -297,7 +297,7 @@ function addMessage(sender, message, showTime, isSelf){
     }
 
 /*
-    $('#messages-log ul').append(					'<li><div class="sender">${sender}: </div><div class="message">${message}</div><div class="fr time">${time}</div></li>');
+    $('#messages-log ul').append(					'<li><span class="sender">${sender}: </span><span class="message">${message}</span><span class="fr time">${time}</span></li>');
 */
 
     $('#messages-log ul').append($msgTemplate);
