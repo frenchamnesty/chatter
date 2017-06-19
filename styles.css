@@ -132,3 +132,31 @@ p, a {
     position: fixed;
     bottom: 0;
 }
+
+.online {
+	border-radius: 50%;
+	width: 30px;
+	height: 30px; 
+    color: green;
+	/* width and height can be anything, as long as they're equal */
+}
+
+/* users */
+
+.user-container {
+    max-height: 200px;
+    overflow-y: hidden;
+}
+
+#user-list {
+    overflow-y: scroll;
+}
+
+.rooms-container {
+    max-height: 200px;
+    overflow-y: hidden;
+}
+
+#room-list {
+    overflow-y: scroll;
+}

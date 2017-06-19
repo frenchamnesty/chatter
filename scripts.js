@@ -108,7 +108,7 @@ function addUser(data){
             userId = data.userId;
         })
 
-        $('#user-list').append('<li class="username" key=' + userId + '>' + username + '</li>' );
+        $('#user-list').append('<span id="#online"></span><li class="username" key=' + userId + '>' + username + '</li>' );
 
      });
 }
