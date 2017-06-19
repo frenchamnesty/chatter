@@ -1,26 +1,23 @@
-// global params
+// GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL
+// ---------------------------------------
 
 var socket = io.connect('http://localhost:3000');
 var userId = null;
 var username = null;
 var currentRoom = null;
+var roomId = null;
+var room = null;
 var serverDisplayName = 'Server';
 
-// prob will do away with this >> 
-var markup = {
-    room: [
-        '<li data-roomId="${room}">',
-        '<span class="icon"></span> ${room}',
-        '</li>'
-    ].join(""),
+// set chat window height
 
-    user: [
-        '<li data-userId="${userId}" class="user">',
-        '<div class="username"><span class="icon"></span> ${username}</div>',
-        '<div class="typing"></div>',
-        '</li>'
-    ].join(""),
-};
+function setHeight(){
+    $('.slimScrollDiv').height('400');
+    $('.slimScrollDiv').css('overflow', 'visible')
+}
+
+// DOM EVENTS - DOM EVENTS - DOM EVENTS -
+// ---------------------------------------
 
 // bind dom events to handler/etc functions
 function bindDOMEvents(){
@@ -36,6 +33,10 @@ function bindDOMEvents(){
         handleMessage();
     })
 
+    $('#room-list ul').on('scroll', function(){
+        $('#room-list ul li.selected').css('top', $(this).scrollTop());
+    })
+
     $('#messages-log ul').on('scroll', function(){
         var self = this;
 
@@ -47,17 +48,23 @@ function bindDOMEvents(){
             }
         }, 50);
     });
+
+    $('#room-list ul li').on('click', function(){
+        var room = $(this).attr('data-roomId');
+        if(room != currentRoom){
+            socket.emit('unsubscribe', { room: currentRoom });
+            socket.emit('subscribe', { room: room });
+        }
+    })
+
+    $('#createRoom').on('click', function(){
+        createRoom();
+    })
 }
 
-function removeUser(user, announced){
-    $('user-list ul li[data-userId="' + user.userId + '"]').remove();
+// TIME TIME TIME TIME TIME TIME TIME TIME
+// --------------------------------------- 
 
-    if(announce){
-        insertMessage(serverDisplayName, user.username + ' has left the chat...', true, false, true )
-    }
-}
-
-// for displaying in the chat
 function getTime() {
     var datetime = new Date();
     var hours = datetime.getHours();
@@ -70,6 +77,10 @@ function getTime() {
 
     return hours + ':' + minutes + ':' + seconds;
 }
+
+
+// USER USER USER USER USER USER USER USER
+// ---------------------------------------
 
 // add user 
 function addUser(data){
@@ -118,6 +129,24 @@ function addUser(data){
      });
 }
 
+function removeUser(user, announced){
+    $('user-list ul li[data-userId="' + user.userId + '"]').remove();
+
+    if(announce){
+        insertMessage(serverDisplayName, user.username + ' has left the chat...', true, false, true )
+    }
+}
+
+function updateUsers(usernames){
+    $('#user-list').empty();
+    $.each(users, function(key, value){
+        $('#user-list').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
+    });
+}  
+
+// MESSAGE MESSAGE MESSAGE MESSAGE MESSAGE 
+// ---------------------------------------
+
 // handle message input
 function handleMessage(){
     var message = $('.chat-input input').val().trim();
@@ -142,8 +171,6 @@ function handleMessage(){
 
 // add message to logs
 function addMessage(sender, message, showTime, isSelf){
-
-    // variable for html structure
     var html = [
 				'<li>',
 					'<span id="sender">${sender} </span>[<span class="fr time">${time}</span>]: <span class="fl text">${text}</span>',
@@ -156,27 +183,155 @@ function addMessage(sender, message, showTime, isSelf){
         time: showTime ? getTime() : ''
     })
 
-    // msg is from self?
     if(isSelf){
         $('#messages-log ul').addClass('message-sender');
 
         console.log('is self?');
     }
 
-    // append message to logs
     $('#messages-log ul').append($msgTemplate);
     $('#messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100);
 }
 
-function updateUsers(usernames){
-    $('#user-list').empty();
-    $.each(users, function(key, value){
-        $('#user-list').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
-    });
-}  
+// ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS
+// ---------------------------------------
+
+function setCurrentRoom(room){
+    currentRoom = room;
+
+    $('.rooms-container ul li.selected').removeClass('selected');
+
+    $('.rooms-container ul li[data-roomId="' + room + '"]').addClass('selected');
+}
+
+// add user to chat room
+function addUserToRoom(user, announce, isSelf){
+    var userTemplate = [
+        '<li data-userId="${userId}" class="user">',
+        '<div class="username"><span class="icon"></span> ${username}</div>',
+        '<div class="typing"></div>',
+        '</li>'
+    ]
+
+    $html = $.tmpl(userTemplate, user);
+
+    if(isSelf){
+        $html.addClass('self');
+    }
+
+    if(announce){
+        addMessage("Server", user.username, + 'has joined the chat...', true, false, true);
+    }
+
+    $html.appendTo('.user-container ul');
+}
+
+// remove user from chat room
+function removeUser(user, announce){
+    $('.user-container ul li[data-userId="' + user.userId + '"]').remove();
+
+    if(announce){
+        addMessage("Server", user.username + ' has left the chat...', true, false, true);
+    }
+}
+
+function createRoom(){
+
+    var roomTemplate = [
+        '<li data-roomId="${room}">',
+        '<span class="icon"></span> ${room}',
+        '</li>'
+    ]
+
+    var createRoomPopUp = swal({
+        title: "name your chatroom", 
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: "enter title"
+    }, function(inputValue){
+        if (inputValue === false) return false;
+        if (inputValue === ""){
+            swal.showInputError("enter a valid name for your chat room");
+            return false;
+        }
+
+        if(inputValue.length <= 3){
+            swal.showInputError("the name of the chat room must be at least 4 characters");
+            return false;
+        }
+
+        inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
+         swal("success!", inputValue + ' has been created - users can now join the room');
+
+        room = inputValue
+        roomId = inputValue.id
+
+         socket.emit('leaveRoom', { room: currentRoom });
+
+         socket.emit('join', function(room){
+            room = room;
+
+            $('#log').animate({ 'opacity': 0}, 200, function(){
+                $(this).hide();
+                $('#m').focus();
+            })
+
+            //$html = $.tmpl(roomTemplate, room);
+
+            //$html.appendTo('.rooms-container ul');
+
+         })
+
+     $('#room-list').append('<span id="#online"></span><li class="username" key=' + roomId + '>' + room + '</li>' );
+
+    })
+
+}
+
+// SOCKET ON - SOCKET ON - SOCKET ON
+// ----------------------------------------
 
 socket.on('connect', addUser);
 socket.on('userList', updateUsers);
+
+socket.on('presence', function(data){
+    if(data.state === 'online'){
+        addUserToRoom(data.user, true);
+    } else if (data.state === 'offline'){
+        removeUser(data.user, true);
+    }
+})
+
+socket.on('roomslist', function(data){
+    for (var i = 0, len = data.rooms.length; i < len; i++){
+        if (data.rooms[i] !== ''){
+            addRoom(data.rooms[i], false);
+        }
+    }
+})
+
+socket.on('roomUsers', function(data){
+    createRoom(data.room, false);
+    setCurrentRoom(data.room);
+
+    addUserToRoom({ username: username, userId: userId }, false, true );
+
+    for(var i = 0, len = data.users.length; i < len; i++){
+        if (data.users[i]){
+            addUserToRoom(data.users[i], false)
+        }
+    }
+})
+
+socket.on('createroom', function(data){
+    createRoom(data.room, true);
+});
+
+socket.on('deleteroom', function(data){
+    deleteRoom(data.room, true);
+})
 
 $(function(){
     bindDOMEvents();

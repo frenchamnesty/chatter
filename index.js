@@ -32,7 +32,7 @@ function disconnect(socket, data){
 
     for(var room in rooms){
         if(room && rooms[room]){
-            unsubscribe(socket, { room: room.replace('/','')});
+            leaveRoom(socket, { room: room.replace('/','')});
         }
     }
     delete usernames[socket.id]
@@ -41,8 +41,6 @@ function disconnect(socket, data){
 // ON CONNECTION >>>>>>>>>>>>>>>
 
 io.on('connection', function(socket){ 
-
-    // on connect - establish the user info
 
     // CONNECT
    socket.on('connect', function(data){
@@ -54,21 +52,19 @@ io.on('connection', function(socket){
         chatmessage(socket, data);
     });
 
-    // JOIN ROOM
-   // socket.on('subscribe', function(data){
-   //     subscribe(socket, data);
-   // })
+   // JOIN ROOM
+   socket.on('join', function(data){
+       join(socket, data);
+   });
 
-// NEED TO CONFIG >>
+   // LEAVE ROOM
+   socket.on('leaveRoom', function(data){
+       leaveRoom(socket, data);
+   });
 
     // DISCONNECT
     socket.on('disconnect', function(data){
         disconnect(socket, data);
-       /* var username = users[[socket.username]]
-        delete username;
-        io.sockets.emit('updateusers', usernames);
-        socket.broadcast.emit('postUpdate', username + ' has left the chat');
-        */
     });
 
 });
@@ -82,14 +78,17 @@ function connect(socket, data){
     // compile users on individual thread
     users[socket.id] = data;
 
+    // ready (push user id id)
     socket.emit('ready', { 
         userId: data.userId 
     });
 
-    // update user list
-    socket.emit('userList', { 
-        users: getUsers() 
-    })
+    // immediately join general channel
+    join(socket, { room: 'general' })
+
+    // get list of rooms
+    socket.emit('roomslist', { rooms: getRooms() });
+
 }
 
 // chat message function 
@@ -110,7 +109,7 @@ function getRooms(){
 
 // subscription function 
 
-function subscribe(socket, data){
+function join(socket, data){
     var rooms = getRooms();
 
     if(rooms.indexOf('/' + data.room) < 0){
@@ -121,12 +120,12 @@ function subscribe(socket, data){
 
     updateStatus(data.room, socket, 'online');
 
-    socket.emit('roomUsers', { room: data.room, users: getUsersInRoom(socket.id, data.room )});
+    socket.emit('roomUsers', { room: data.room, users: getUsers(socket.id, data.room )});
 }
 
 // get users in room function 
 
-function getUsersInRoom(socketId, room){
+function getUsers(socketId, room){
 	// get array of socket ids in this room
 	var socketIds = io.sockets.manager.rooms['/' + room];
 	var userSockets = [];
@@ -144,26 +143,28 @@ function getUsersInRoom(socketId, room){
 			}
 		}
 	}
-	
 	return socketIds;
 }
 
-// get users function 
+// count online users 
 
-function getUsers(socketId, user){
-    var socketIds = io.sockets.manager.users['/' + user];
-    var users = [];
-
-    if (socketIds && socketIds.length > 0){
-        socketsCount = socketIds.length;
-
-        for (var i = 0, len = socketIds.length; i < len; i++){
-            if (socketIds[i] !== socketId){
-                users.push(userSockets[socketIds[i]])
-            }
-        }
+function countUsers(room){
+    if(io.sockets.manager.rooms['/' + room]){
+        return io.sockets.manager.rooms['/' + room].length;
     }
-    return users
+    return 0;
+}
+
+// leave room 
+
+function leaveRoom(socket, data){
+    updateStatus(data.room, socket, 'offline');
+
+    socket.leave(data.room);
+
+    if(!countUsers(data.room)){
+        io.sockets.emit('deleteroom', { room: data.room })
+    }
 }
 
 // update state of chat function 
