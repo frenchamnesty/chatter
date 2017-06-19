@@ -88,6 +88,11 @@ function addUser(data){
             return false;
         }
 
+        if(inputValue.length <= 3){
+            swal.showInputError("username must be at least 4 characters");
+            return false;
+        }
+
         inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
          swal("all set!", "welcome " + inputValue + ', let the chatter begin');
 
