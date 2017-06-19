@@ -35,6 +35,8 @@ p, a {
     padding: 15px;
     background-color: #84a0d4;
     color: white;
+    border-bottom: 3px solid #4a70c9;
+
 }
 
 /* chat log */
@@ -66,10 +68,15 @@ p, a {
 
 .btn.btn-default { 
     /*background: rgb(130, 224, 255) !important; */
-    background: #ed7b64;
+   /* background: #ed7b64; */
+    background: #4a70c9;
     border: none;  
-    width: 90%;
-    padding: 10px;
+    width: 89.25%;
+    padding: 8px;    
+    color: white;
+    font-family: 'Roboto Mono', monospace;
+    text-transform: lowercase;
+    letter-spacing: 1px;
 }
 
 #send {
@@ -90,7 +97,7 @@ p, a {
     min-height: 400px;
     max-height: 400px;
     overflow-y: scroll;
-
+    border: 3px solid #4a70c9;
 }
 
 #messages-log { 
