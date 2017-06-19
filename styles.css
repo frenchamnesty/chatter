@@ -163,6 +163,7 @@ p, a {
 
 #createRoom {
     width: 50%;
+    margin-top: 15px;
 }
 
 li#online.room {

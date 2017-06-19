@@ -60,6 +60,7 @@ function bindDOMEvents(){
 
     $('#createRoom').on('click', function(){
         console.log('click create room event');
+        $('#chatlog-header').empty();
         createRoom();
     })
 }
@@ -300,7 +301,7 @@ function bindSocketEvents(){
         socket.on('roomslist', function(data){
         for (var i = 0, len = data.rooms.length; i < len; i++){
             if (data.rooms[i] !== ''){
-                addRoom(data.rooms[i], false);
+                createRoom(data.rooms[i], false);
             }
         }
     })
