@@ -286,6 +286,7 @@ function createRoom(){
 
      $('#room-list').append('<span id="#online"></span><li class="username" key=' + roomId + '>' + room + '</li>' );
 
+     $('#chatlog-header').append('<span id="#room-name" kye=' + roomId + '>' + room + '</span>')
     })
 
 }
