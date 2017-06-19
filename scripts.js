@@ -9,6 +9,14 @@ var roomId = null;
 var room = null;
 var serverDisplayName = 'Server';
 
+var local;
+
+try {
+    local = 'localStorage' in window && window['localStorage'] !== null;
+} catch(e){
+    local = false;
+}
+
 // set chat window height
 
 function setHeight(){
@@ -22,6 +30,9 @@ function setHeight(){
 // bind dom events to handler/etc functions
 function bindDOMEvents(){
     $('.chat-input input').on('keydown', function(e){
+        console.log('user typing');
+
+        handleUsertyping(e);
         var key = e.which || e.keyCode;
 
         if(key == 13) {
@@ -49,7 +60,7 @@ function bindDOMEvents(){
         }, 50);
     });
 
-    $('#room-list ul li #online').on('click', function(){
+    $('#room-list ul li').on('click', function(){
         console.log('clicking on room');
         var room = $(this).attr('data-roomId');
         if(room != currentRoom){
@@ -127,7 +138,7 @@ function addUser(data){
             userId = data.userId;
         })
 
-        $('#user-list').append('<span id="#online"></span><li class="username" key=' + userId + '>' + username + '</li>' );
+        $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + userId + '>' + username + '</li>' );
 
      });
 }
@@ -146,6 +157,51 @@ function updateUsers(usernames){
         $('#user-list').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
     });
 }  
+
+// TYPING TYPING TYPING TYPING TYPING TYPING TYPING TYPING
+// ---------------------------------------
+
+
+function handleUsertyping(recv){
+    var userId = recv.userId;
+    var main = $('#messages-log' + userId);
+    socket.emit('isTyping', { user: userId })
+    if (main.parent().find('#isTyping').first().hasClass('no-display')){
+        main.parent().find('#isTyping').first().removeClass('no-display');
+
+        setTimeout(function(){
+            main.parent().find('#isTyping').first().addClass('no-display');
+        }, 2000)
+    }
+}
+
+function handleChatEvents(id, user){
+
+    $('#messages-log' + id).dialog({
+        open: function(event, ui){
+            var main = $('#messages-log' + userId);
+            var username = main.data("username");
+
+            main.parent().find('#isTyping').first().addClass('no-display');
+
+
+            var typingTimeout;
+
+            main.find('#chat-input').first().keyup(function(e){
+                if(typingTimeout !== undefined) clearTimeout(typingTimeout);
+
+                typingTimeout = setTimeout(function(){
+                    call_user_is_typing(user)
+                }, 400);
+
+            })
+        }
+    })
+}
+
+function call_user_is_typing(user){
+    socket.emit('user_typing', { 'user': user })
+}
 
 // MESSAGE MESSAGE MESSAGE MESSAGE MESSAGE 
 // ---------------------------------------
@@ -288,7 +344,33 @@ function createRoom(){
 // SOCKET ON - SOCKET ON - SOCKET ON
 // ----------------------------------------
 
-function bindSocketEvents(){
+
+function connect(){
+    connected = true;
+    addUser();
+
+
+}
+
+
+
+
+// notes: 
+
+// ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react
+
+
+$(function(){
+    var connected = false;
+    var typing = false;
+    var lastTypingTime;
+    var lastMentionedUser = '';
+    var lastMentionedId = 0;
+    var main = $(this);
+
+    socket.on('connect', connect);
+    bindDOMEvents();
+    main.parent().find('#isTyping').first().addClass('no-display');
 
     socket.on('presence', function(data){
         if(data.state === 'online'){
@@ -298,7 +380,7 @@ function bindSocketEvents(){
         }
     })
 
-        socket.on('roomslist', function(data){
+    socket.on('roomslist', function(data){
         for (var i = 0, len = data.rooms.length; i < len; i++){
             if (data.rooms[i] !== ''){
                 createRoom(data.rooms[i], false);
@@ -327,22 +409,69 @@ function bindSocketEvents(){
     socket.on('deleteroom', function(data){
         deleteRoom(data.room, true);
     })
-}
 
-$(function(){
-    socket.on('connect', connect);
+    function changeStatus(status){
+        if(status === -1){
+            $('.statusIndicator').addClass('offline').removeClass('connecting');
+        } else if (status === 0) {
+            $('.statusIndicator').removeClass('offline').addClass('connecting');
+        } else if (status === 1){
+            $('.statusIndicator').removeClass('offline').removeClass('connecting');
+        }
+    }
 
-    bindDOMEvents();
+    function updateUsersOnlineList(data, action){
+        if (data.userCount !== undefined){
+            var num = parseInt(data.userCount);
+
+            $('.onlineNum').text(num);
+        }
+    }
+
+    function sendMessage(){
+        var message = $('.chat-input input').val();
+
+        if (message && connected){
+            $('.chat-input').val('');
+
+            socket.emit('chatmessage', {
+                text: message,
+                replyId: lastMentionId
+            });
+
+            lastMentionedId = 0;
+            lastMentionedUser = "";
+        }
+    }
+
+    function addChatTyping(data){
+        addMessageElement(messageTypingTempalte(data))
+    }
+
+    function removeChatTyping(data){
+        $('#isTyping' + data.user.id).remove();
+    }
+
+    function updateTyping() {
+        return false;
+        
+        if (connected) {
+
+            if (!typing) {
+                typing = true;
+                socket.emit('typing');
+            }
+
+            lastTypingTime = (new Date()).getTime();
+
+            setTimeout(function() {
+                var typingTimer = (new Date()).getTime();
+                var timeDiff = typingTimer - lastTypingTime;
+                if (timeDiff >= 500 && typing) {
+                socket.emit('stop typing');
+                typing = false;
+                }
+            }, 500);
+        }
+    }
 })
-
-function connect(){
-    addUser();
-    bindSocketEvents();
-}
-
-
-
-
-// notes: 
-
-// ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react

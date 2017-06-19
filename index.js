@@ -23,6 +23,7 @@ app.get('/', function(req, res){
 
 // user list obj 
 var users = {};
+var rooms = {};
 
 // user channels obj
 //var chatterUsers = {};
@@ -50,6 +51,10 @@ io.on('connection', function(socket){
     // CHATMESSAGE
     socket.on('chatmessage', function(data){
         chatmessage(socket, data);
+    });
+
+    socket.on('isTyping', function(data){
+        isTyping(socket, data);
     });
 
    // JOIN ROOM
@@ -99,6 +104,12 @@ function chatmessage(socket, data){
     socket.broadcast.to(data.room).emit('chatmessage', { user: users[socket.id], message: data.message })
 
     //, room: data.room
+}
+
+function isTyping(socket, data){
+    console.log('user is typing [index.js]');
+
+    socket.broadcaset.to(data.room).emit('isTyping', { user: users[socket.id] })
 }
 
 // get rooms function

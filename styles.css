@@ -169,3 +169,11 @@ p, a {
 li#online.room {
     list-style: none;
 }
+
+.online {
+    color: green;
+}
+
+.offline {
+    color: red;
+}
