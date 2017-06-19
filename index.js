@@ -113,10 +113,10 @@ function join(socket, data){
     var rooms = getRooms();
 
     if(rooms.indexOf('/' + data.room) < 0){
-        socket.broadcast.emit('addroom', { room: data.room });
+        socket.broadcast.emit('addroom', { room: data.room, roomId: data.uid() });
     }
 
-    socket.join(data.room);
+    socket.join(data.room, data.roomId);
 
     updateStatus(data.room, socket, 'online');
 

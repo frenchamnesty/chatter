@@ -49,15 +49,17 @@ function bindDOMEvents(){
         }, 50);
     });
 
-    $('#room-list ul li').on('click', function(){
+    $('#room-list ul li #online').on('click', function(){
+        console.log('clicking on room');
         var room = $(this).attr('data-roomId');
         if(room != currentRoom){
-            socket.emit('unsubscribe', { room: currentRoom });
-            socket.emit('subscribe', { room: room });
+            socket.emit('leaveRoom', { room: currentRoom });
+            socket.emit('join', { room: room });
         }
     })
 
     $('#createRoom').on('click', function(){
+        console.log('click create room event');
         createRoom();
     })
 }
@@ -197,6 +199,7 @@ function addMessage(sender, message, showTime, isSelf){
 // ---------------------------------------
 
 function setCurrentRoom(room){
+    console.log('set current room');
     currentRoom = room;
 
     $('.rooms-container ul li.selected').removeClass('selected');
@@ -206,6 +209,7 @@ function setCurrentRoom(room){
 
 // add user to chat room
 function addUserToRoom(user, announce, isSelf){
+    console.log('add user to room');
     var userTemplate = [
         '<li data-userId="${userId}" class="user">',
         '<div class="username"><span class="icon"></span> ${username}</div>',
@@ -223,7 +227,7 @@ function addUserToRoom(user, announce, isSelf){
         addMessage("Server", user.username, + 'has joined the chat...', true, false, true);
     }
 
-    $html.appendTo('.user-container ul');
+    $html.appendTo('#messages-log ul');
 }
 
 // remove user from chat room
@@ -236,7 +240,7 @@ function removeUser(user, announce){
 }
 
 function createRoom(){
-
+    console.log('create room');
     var roomTemplate = [
         '<li data-roomId="${room}">',
         '<span class="icon"></span> ${room}',
@@ -266,77 +270,74 @@ function createRoom(){
          swal("success!", inputValue + ' has been created - users can now join the room');
 
         room = inputValue
-        roomId = inputValue.id
 
          socket.emit('leaveRoom', { room: currentRoom });
 
-         socket.emit('join', function(room){
-            room = room;
+         socket.emit('join', { room: room, roomId: roomId });
 
-            $('#log').animate({ 'opacity': 0}, 200, function(){
-                $(this).hide();
-                $('#m').focus();
-            })
-
-            //$html = $.tmpl(roomTemplate, room);
-
-            //$html.appendTo('.rooms-container ul');
-
-         })
-
-     $('#room-list').append('<span id="#online"></span><li class="username" key=' + roomId + '>' + room + '</li>' );
+     $('#room-list').append('<li id="online" class="room" key=' + roomId + '>' + room + '</li>');
 
      $('#chatlog-header').append('<span id="#room-name" kye=' + roomId + '>' + room + '</span>')
     })
 
 }
 
+
+
 // SOCKET ON - SOCKET ON - SOCKET ON
 // ----------------------------------------
 
-socket.on('connect', addUser);
-socket.on('userList', updateUsers);
+function bindSocketEvents(){
 
-socket.on('presence', function(data){
-    if(data.state === 'online'){
-        addUserToRoom(data.user, true);
-    } else if (data.state === 'offline'){
-        removeUser(data.user, true);
-    }
-})
-
-socket.on('roomslist', function(data){
-    for (var i = 0, len = data.rooms.length; i < len; i++){
-        if (data.rooms[i] !== ''){
-            addRoom(data.rooms[i], false);
+    socket.on('presence', function(data){
+        if(data.state === 'online'){
+            addUserToRoom(data.user, true);
+        } else if (data.state === 'offline'){
+            removeUser(data.user, true);
         }
-    }
-})
+    })
 
-socket.on('roomUsers', function(data){
-    createRoom(data.room, false);
-    setCurrentRoom(data.room);
-
-    addUserToRoom({ username: username, userId: userId }, false, true );
-
-    for(var i = 0, len = data.users.length; i < len; i++){
-        if (data.users[i]){
-            addUserToRoom(data.users[i], false)
+        socket.on('roomslist', function(data){
+        for (var i = 0, len = data.rooms.length; i < len; i++){
+            if (data.rooms[i] !== ''){
+                addRoom(data.rooms[i], false);
+            }
         }
-    }
-})
+    })
 
-socket.on('createroom', function(data){
-    createRoom(data.room, true);
-});
+    socket.on('roomUsers', function(data){
+        console.log('roomUsers');
+        createRoom(data.room, false);
+        setCurrentRoom(data.room);
 
-socket.on('deleteroom', function(data){
-    deleteRoom(data.room, true);
-})
+        addUserToRoom({ username: username, userId: userId }, false, true );
+
+        for(var i = 0, len = data.users.length; i < len; i++){
+            if (data.users[i]){
+                addUserToRoom(data.users[i], false)
+            }
+        }
+    })
+
+    socket.on('createroom', function(data){
+        createRoom(data.room, true);
+    });
+
+    socket.on('deleteroom', function(data){
+        deleteRoom(data.room, true);
+    })
+}
 
 $(function(){
+    socket.on('connect', connect);
+
     bindDOMEvents();
 })
+
+function connect(){
+    addUser();
+    bindSocketEvents();
+}
 
 
 

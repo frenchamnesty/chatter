@@ -20,7 +20,7 @@ body, html {
 }
 
 ul {
-    list-style: none;
+    list-style: none !important;
     margin: 0;
     padding: 0;
 }
@@ -159,4 +159,12 @@ p, a {
 
 #room-list {
     overflow-y: scroll;
+}
+
+#createRoom {
+    width: 50%;
+}
+
+li#online.room {
+    list-style: none;
 }
