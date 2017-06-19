@@ -79,7 +79,7 @@ function addUser(data){
         showCancelButton: false,
         closeOnConfirm: false,
         animation: "slide-from-top",
-        inputPlaceholder: "...right here"
+        inputPlaceholder: "enter name here"
     }, function(inputValue){
         if (inputValue === false) return false;
 
@@ -89,7 +89,7 @@ function addUser(data){
         }
 
         inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("## good2go ##!", "cool, start chatting " + inputValue);
+         swal("all set!", "welcome " + inputValue + ', let the chatter begin');
 
         username = inputValue
         

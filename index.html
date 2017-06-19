@@ -12,8 +12,8 @@
     <!-- header scripts and css -->
     <script src="node_modules/sweetalert/dist/sweetalert.min.js"></script>
     <link rel="stylesheet" href="node_modules/sweetalert/dist/sweetalert.css">
-    <link href="css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Inconsolata|Roboto|Roboto+Mono" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="styles.css"/>
   </head>
@@ -21,7 +21,9 @@
   <body>
     
     <!-- navbar -->
-    <div id="nav-bar">welcome to chatter</div>
+    <header id="header">
+      <h1>chatter</h1>
+    </header>
 
     <!-- body --> 
     <div class="body-wrap container-fluid">
@@ -29,23 +31,37 @@
       <div class="row">
 
         <!-- users list -->
-        <div class="col-sm-4 col-lg-4 users">
+        <div class="col-sm-4 col-lg-4 chat-left">
+          <div class="container-fluid sidebar-left">
+            <div class="row user-list">
+              <br/>
+              <h3>users online</h3>
+              <ul id="user-list"></ul>
+            </div>
           <br/>
-          <h3>in the chat...</h3>
-          <ul id="user-list"></ul>
+            <div class="row room-list">
+              <h3>rooms</h3>
+              <ul id="room-list"><ul>
+            </div>
+          <br/>
+            <div class="row chatter-info">
+              <h3> about chatter <h3>
+              <p>chatter on <a id="github" href="https://www.github.com/frenchamnesty/chatter">github</a></p>
+              <p id="built-by-header">built by <a id="built-by" href="http://www.kathleenfrench.co"> kathleen french</a></p>
+            </div>
+          </div>
         </div>
 
         <!-- chat log --> 
 
         <div class="col-sm-8 col-lg-8 chatlog-wrap">
-
+            <h3 id="chatlog-header">room: #tk</h3>  
             <!-- notifications -->
             <div id="chat-notification"></div>
 
             <!-- messages window --> 
             <div id="messages-wrap">
-              <br/>
-              <h3>this is the chatlog</h3>
+              <!-- put room name here -->
               <br/>
               
               <!-- messages load here -->
@@ -56,12 +72,16 @@
 
             <!-- chat input -->
 
-            <div class="chat-bottom">
-              <div class="chat-input">
-                <input type="text" placeholder="enter message here..." autocomplete="off" />
-              </div>
-              <div class="chat-submit">
-                <button class="btn btn-default">Send</button>
+            <div class="chat-bottom container-fluid">
+              <div class="row">
+
+                <div class="chat-input col-xs-6">
+                  <input id="chat-input" type="text" placeholder="enter message here..." autocomplete="off" />
+                </div>
+                <div class="chat-submit col-xs-2">
+                  <div id="send" class="btn btn-default">Send</div>
+                </div>
+
               </div>
             </div>
 
@@ -79,5 +99,5 @@
     <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>    <script src="scripts.js"></script>
   </body>
-  
+
 </html>

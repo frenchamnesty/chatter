@@ -5,10 +5,12 @@ font-family: 'Roboto Mono', monospace;
 font-family: 'Inconsolata', monospace;
 */
 
+/* globals */
+
 * { 
     margin: 0; 
     padding: 0; 
-    box-sizing: border-box; 
+   /* box-sizing: border-box;  */
 }
 
 body, html { 
@@ -17,26 +19,59 @@ body, html {
     width: 100%;
 }
 
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+p, a {
+    font-size: 12px;
+}
+
+/* header */
+
+#header {
+    padding: 15px;
+}
+
+/* chat log */
+
+#chatlog-header {
+    text-align: right;
+}
+/* chat input */
+
 .chat-bottom { 
-    background: #000; 
+    /*background: #000; 
+        width: 100%; 
+    */
+    width: 100%;
     padding: 3px; 
     position: fixed; 
     bottom: 0; 
-    width: 100%; 
+
 }
 
-.chat-bottom input { 
+.chat-input input  { 
+    /*   width: 90%; 
+       padding: 10px; 
+     */
     border: 0; 
-    padding: 10px; 
-    width: 90%; 
-    margin-right: .5%; 
+    width: 100%;
+    padding: 10px;
 }
 
-.chat-bottom button { 
-    width: 9%; 
-    background: rgb(130, 224, 255); 
-    border: none; 
-    padding: 10px; 
+.btn.btn-default { 
+    background: rgb(130, 224, 255) !important; 
+    border: none;  
+    width: 90%;
+    padding: 10px;
+}
+
+/* messages window */
+#messages-wrap {
+    background-color: lightblue;
 }
 
 #messages-log { 
@@ -46,22 +81,23 @@ body, html {
     padding: 0; 
 }
 
-#messages-wrap {
-    background-color: lightblue;
+#messages-log li { 
+    padding: 5px 10px; 
 }
 
-#messages-log li { padding: 5px 10px; }
+#messages-log li:nth-child(odd) { 
+    background: #eee; 
+}
 
-#messages-log li:nth-child(odd) { background: #eee; }
-
-/* messages */
+/* messages themselves */
 
 #sender {
     font-size: 15px;
 }
 
-ul {
-    list-style: none;
-    margin: 0 !important;
-    padding: 0 !important;
+/* chat left sidebar */
+
+.chatter-info {
+    position: fixed;
+    bottom: 0;
 }
