@@ -99,6 +99,7 @@ function connect(socket, data){
 // chat message function 
 
 function chatmessage(socket, data){
+    console.log('socket: ', socket);
     console.log('chat message index.js firing')
 
     socket.broadcast.to(data.room).emit('chatmessage', { user: users[socket.id], message: data.message })
@@ -107,6 +108,7 @@ function chatmessage(socket, data){
 }
 
 function isTyping(socket, data){
+    console.log('socket: ', socket);
     console.log('user is typing [index.js]');
 
     socket.broadcaset.to(data.room).emit('isTyping', { user: users[socket.id] })
