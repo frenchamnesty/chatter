@@ -9,6 +9,10 @@ var roomId = null;
 var room = null;
 var serverDisplayName = 'Server';
 
+window.chatter = {};
+
+let chatter = window.chatter;
+
 var local;
 
 try {
@@ -362,6 +366,8 @@ function connect(){
 
 
 $(function(){
+    chatter.debug = {};
+
     var connected = false;
     var typing = false;
     var lastTypingTime;
