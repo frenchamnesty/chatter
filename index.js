@@ -1,8 +1,9 @@
 
 // global params
 var express = require('express');
+var http = require('http');
 var app = express();
-var server = require('http').createServer(app);
+var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 var port = 3000;
 var path = require('path');
@@ -99,6 +100,7 @@ function connect(socket, data){
 // chat message function 
 
 function chatmessage(socket, data){
+    console.log('socket: ', socket);
     console.log('chat message index.js firing')
 
     socket.broadcast.to(data.room).emit('chatmessage', { user: users[socket.id], message: data.message })
@@ -107,9 +109,10 @@ function chatmessage(socket, data){
 }
 
 function isTyping(socket, data){
+    console.log('socket: ', socket);
     console.log('user is typing [index.js]');
 
-    socket.broadcaset.to(data.room).emit('isTyping', { user: users[socket.id] })
+    socket.broadcast.to(data.room).emit('isTyping', { user: users[socket.id] })
 }
 
 // get rooms function

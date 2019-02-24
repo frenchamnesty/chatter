@@ -324,17 +324,18 @@ function createRoom(){
         }
 
         inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("success!", inputValue + ' has been created - users can now join the room');
+        
+        swal("success!", inputValue + ' has been created - users can now join the room');
 
         room = inputValue
 
-         socket.emit('leaveRoom', { room: currentRoom });
+        socket.emit('leaveRoom', { room: currentRoom });
 
-         socket.emit('join', { room: room, roomId: roomId });
+        socket.emit('join', { room: room, roomId: roomId });
 
-     $('#room-list').append('<li id="online" class="room" key=' + roomId + '>' + room + '</li>');
+        $('#room-list').append('<li id="online" class="room" key=' + roomId + '>' + room + '</li>');
 
-     $('#chatlog-header').append('<span id="#room-name" kye=' + roomId + '>' + room + '</span>')
+        $('#chatlog-header').append('<span id="#room-name" kye=' + roomId + '>' + room + '</span>');
     })
 
 }
