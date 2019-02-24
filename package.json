@@ -2,10 +2,10 @@
   "name": "chatter",
   "version": "1.0.0",
   "description": "a simple chat app made with node and socket.io",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
