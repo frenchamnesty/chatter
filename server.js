@@ -62,6 +62,10 @@ io.on('connection', function(socket){
 
     console.log('users: ', users);
 
+    socket.on('ready', function(data) {
+        console.log('ready fired');
+        ready(socket, data);
+    });
     
     // CONNECT
    socket.on('connect', function(data){
@@ -96,6 +100,24 @@ io.on('connection', function(socket){
 });
 
 // connect function
+
+function ready(socket, data) {
+    userId = uid();
+    data.userId = userId;
+    users[socket.id] = data;
+
+
+    socket.emit('appendUser', {
+        username: data.username,
+        userId: userId,
+        users: users
+    });
+
+    // join(socket, {
+    //     room: 'general'
+    // })
+
+}
 
 function connect(socket, data){
     // generate user id

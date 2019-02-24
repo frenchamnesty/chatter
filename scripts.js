@@ -1,5 +1,7 @@
 // GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL
 // ---------------------------------------
+window.chatter = {};
+let chatter = window.chatter;
 
 var socket = io.connect('http://localhost:3000');
 var userId = null;
@@ -8,11 +10,6 @@ var currentRoom = null;
 var roomId = null;
 var room = null;
 var serverDisplayName = 'Server';
-
-window.chatter = {};
-
-let chatter = window.chatter;
-
 var local;
 
 try {
@@ -34,8 +31,6 @@ function setHeight(){
 // bind dom events to handler/etc functions
 function bindDOMEvents(){
     $('.chat-input input').on('keydown', function(e){
-        console.log('user typing');
-
         handleUsertyping(e);
         var key = e.which || e.keyCode;
 
@@ -102,7 +97,7 @@ function getTime() {
 
 // add user 
 function addUser(data){
-    var usernamePopUp = swal({
+    swal({
         title: "what's your username?",
         type: "input",
         showCancelButton: false,
@@ -127,24 +122,38 @@ function addUser(data){
 
         username = inputValue
         
+        socket.emit('ready', {username: username});
 
-        socket.emit('ready', function(data){
-            data = {
-                userId: data.userId,
-                username: data.username 
-            },
+        // socket.emit('ready', function(data){
+        //     data = {
+        //         userId: data.userId,
+        //         username: data.username 
+        //     },
 
-            $('#log').animate({ 'opacity': 0}, 200, function(){
-                $(this).hide();
-                $('#m').focus();
-            })
+        //     $('#log').animate({ 'opacity': 0}, 200, function(){
+        //         $(this).hide();
+        //         $('#m').focus();
+        //     })
 
-            userId = data.userId;
+        //     userId = data.userId;
+        // })
+
+        $('#log').animate({
+            'opacity': 0
+        }, 200, function () {
+            $(this).hide();
+            $('#m').focus();
         })
 
-        $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + userId + '>' + username + '</li>' );
+        // $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + userId + '>' + username + '</li>' );
 
      });
+}
+
+function appendUser(data) {
+    console.log('append user');
+    chatter.debug.users = data.users;
+    $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + data.userId + '>' + data.username + '</li>');
 }
 
 function removeUser(user, announced){
@@ -352,9 +361,8 @@ function createRoom(){
 
 function connect(){
     connected = true;
+    chatter.connected = connected;
     addUser();
-
-
 }
 
 
@@ -378,6 +386,10 @@ $(function(){
     socket.on('connect', connect);
     bindDOMEvents();
     main.parent().find('#isTyping').first().addClass('no-display');
+
+    socket.on('appendUser', function(data) {
+        appendUser(data);
+    })
 
     socket.on('presence', function(data){
         if(data.state === 'online'){
