@@ -45,23 +45,6 @@ function disconnect(socket, data) {
 io.on('connection', function(socket){ 
     console.log('on connection');
 
-    // var rooms = io.sockets.rooms;
-    // var ids = io.sockets.ids;
-    // console.log('rooms: ', rooms);
-    // console.log('ids: ', ids);
-
-    // var newUser = uid();
-    // users[socket.id] = newUser;
-
-    // io.sockets.users = {};
-    // io.sockets.users[socket.id] = newUser;
-
-    // socket.emit('ready', {
-    //     userId: newUser
-    // })
-
-    console.log('users: ', users);
-
     socket.on('ready', function(data) {
         console.log('ready fired');
         ready(socket, data);
@@ -113,31 +96,37 @@ function ready(socket, data) {
         users: users
     });
 
-    // join(socket, {
-    //     room: 'general'
-    // })
-
-}
-
-function connect(socket, data){
-    // generate user id
-    data.userId = uid();
-
-    // compile users on individual thread
-    users[socket.id] = data;
-
-    // ready (push user id id)
-    socket.emit('ready', { 
-        userId: data.userId 
-    });
-
     // immediately join general channel
-    join(socket, { room: 'general' })
+    join(socket, {
+        room: 'general'
+    })
 
     // get list of rooms
-    socket.emit('roomslist', { rooms: getRooms() });
+    socket.emit('roomslist', {
+        rooms: getRooms()
+    });
 
 }
+
+// function connect(socket, data){
+//     // generate user id
+//     data.userId = uid();
+
+//     // compile users on individual thread
+//     users[socket.id] = data;
+
+//     // ready (push user id id)
+//     socket.emit('ready', { 
+//         userId: data.userId 
+//     });
+
+//     // immediately join general channel
+//     join(socket, { room: 'general' })
+
+//     // get list of rooms
+//     socket.emit('roomslist', { rooms: getRooms() });
+
+// }
 
 // chat message function 
 
@@ -156,49 +145,82 @@ function isTyping(socket, data){
 // get rooms function
 
 function getRooms(){
-    return io.sockets.manager && io.sockets.manager.rooms ? Object.keys(io.sockets.manager.rooms) : 0;
+    return io.sockets.adapter && io.sockets.adapter.rooms ? Object.keys(io.sockets.adapter.rooms) : false;
 }
 
 // subscription function 
 
 function join(socket, data){
+    var roomId = uid();
     console.log('join | data: ', data);
 
     var rooms = getRooms();
+    console.log('ROOMS: ', rooms);
 
-    if(rooms !== 0 && rooms.indexOf('/' + data.room) <= 0){
-        socket.broadcast.emit('addroom', { room: data.room, roomId: data.uid() });
+    if (!rooms) {
+        roomId = uid();
+        console.log('room id: ', roomId);
+        socket.broadcast.emit('addroom', {
+            room: data.room,
+            roomId: roomId
+        })
+        
+        socket.join(data.room, roomId);
+
+    } else if (rooms && rooms.indexOf('/' + data.room) <= 0) {
+        socket.broadcast.emit('addroom', {
+            room: data.room,
+            roomId: roomId
+        });
+
+        socket.join(data.room, roomId);
+    } else {
+        socket.join(data.room, data.roomId);
     }
 
-    socket.join(data.room, data.roomId);
-
-    debugger;
     updateStatus(data.room, socket, 'online');
 
-    socket.emit('roomUsers', { room: data.room, users: getUsers(socket.id, data.room )});
+    var userIds = getUsers(socket.id, data.room);
+
+    socket.emit('roomUsers', { room: data.room, users: userIds});
 }
 
 // get users in room function 
-
 function getUsers(socketId, room){
+    // console.log('io.sockets: ', io.sockets);
+    console.log('users: ', users);
+    console.log('room: ', room);
+    var rooms = io.sockets.adapter.rooms;
+    var roomTarget = rooms[room];
+    console.log('roomtarget: ', roomTarget);
+    console.log('rooms: ', rooms);
+
+    var socketIds = roomTarget.sockets;
+    console.log('socketIds: ', socketIds);
+
 	// get array of socket ids in this room
-	var socketIds = io.sockets.manager.rooms['/' + room];
-	var userSockets = [];
+	// var socketIds = io.sockets.manager.rooms['/' + room];
+    var userSockets = [];
+    
+    var ids = Object.keys(socketIds);
+    console.log('ids: ', ids);
+
+    return ids;
 	
-	if(socketIds && socketIds.length > 0){
-		socketsCount = socketIds.lenght;
+	// if(socketIds && socketIds.length > 0){
+	// 	socketsCount = socketIds.length;
 		
-		// push every client to the result array
-		for(var i = 0, len = socketIds.length; i < len; i++){
+	// 	// push every client to the result array
+	// 	for(var i = 0, len = socketIds.length; i < len; i++){
 			
-			// check if the socket is not the requesting
-			// socket
-			if(socketIds[i] != socketId){
-				userSockets.push(users[socketIds[i]]);
-			}
-		}
-	}
-	return socketIds;
+	// 		// check if the socket is not the requesting
+	// 		// socket
+	// 		if(socketIds[i] != socketId){
+	// 			userSockets.push(users[socketIds[i]]);
+	// 		}
+	// 	}
+	// }
+	// return socketIds;
 }
 
 // count online users 
@@ -225,7 +247,6 @@ function leaveRoom(socket, data){
 // update state of chat function 
 
 function updateStatus(room, socket, state){
-    console.log('room: ', room);
     room = room.replace('/', '');
     socket.broadcast.to(room).emit('presence', { 
         user: users[socket.id], 
