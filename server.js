@@ -90,7 +90,7 @@ function disconnect(socket, data) {
 function ready(socket, data) {
     userId = uid();
     data.userId = userId;
-    users[socket.id] = data;
+    users[socket.id] = [data];
 
 
     socket.emit('appendUser', {
