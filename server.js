@@ -26,44 +26,45 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
-// user channels obj
-//var chatterUsers = {};
-
 // ON CONNECTION >>>>>>>>>>>>>>>
 
 io.on('connection', function (socket) {
-    socket.join('general');
-    console.log('socket: ', socket);
+    // autojoin general room
+    // socket.on('connect', function(data) {
+    //     connect(socket, data);
+    // })
+
+    // socket.on('subscribe', function(data) {
+    //     subscribe(socket, data);
+    // })
 
     socket.on('ready', function(data) {
         console.log('user created, ready fired: ', data);
         ready(socket, data);
     });
-    
-    // CONNECT
-//    socket.on('connect', function(data){
-//        console.log('on connect: ', data);
-//         connect(socket, data);
-//     });
 
     // CHATMESSAGE
     socket.on('chatmessage', function(data){
         chatmessage(socket, data);
     });
 
-    socket.on('isTyping', function(data){
-        isTyping(socket, data);
-    });
+    // socket.on('isTyping', function(data){
+    //     isTyping(socket, data);
+    // });
+
+    // socket.on('typing', (data) => {
+    //     socket.broadcast.emit('typing', { name: socket.name })
+    // })
 
    // JOIN ROOM
-   socket.on('join', function(data){
-       join(socket, data);
-   });
+//    socket.on('join', function(data){
+//        join(socket, data);
+//    });
 
    // LEAVE ROOM
-   socket.on('leaveRoom', function(data){
-       leaveRoom(socket, data);
-   });
+//    socket.on('leaveRoom', function(data){
+//        leaveRoom(socket, data);
+//    });
 
     socket.on('disconnect', function () {
         console.log('user disconnected');
@@ -75,6 +76,75 @@ io.on('connection', function (socket) {
     // });
 
 });
+
+function connect(socket, data) {
+    data.userId = createUserId();
+    users[socket.id] = data;
+    socket.emit('isReady', {
+        userId: data.userId
+    });
+
+    console.log('users: ', users);
+
+    subscribe(socket, {
+        room: 'general'
+    });
+
+    socket.emit('rooms', {
+        rooms: getRoomsList()
+    });
+}
+
+// function subscribe(socket, data) {
+//     var rooms = getRoomsList();
+
+//     if (rooms.indexOf('/' + data.room) < 0) {
+//         socket.broadcast.emit('createRoom', {
+//             room: data.room
+//         })
+//     }
+
+//     socket.join(data.room);
+
+//     updatePresence(data.room, socket, 'online')
+
+//     socket.emit('roomUsers', {
+//         room: data.room,
+//         users: getUsersInRoom(socket.id, data.room)
+//     })
+// }
+
+function getRoomsList() {
+    return Object.keys(io.sockets.manager.rooms);
+}
+
+function getUsersInRoom(socketId, room) {
+    var socketIds = io.sockets.manager.rooms['/' + room];
+    var usersIds = [];
+
+    if (socketIds && socketIds.length > 0) {
+        for (var i = 0; i < socketIds.length; i ++) {
+            if (socketIds[i] !== socketId) {
+                usersIds.push(users[socketIds[i]])
+            }
+        }
+    }
+
+    return userIds;
+}
+
+function updatePresence(room, socket, state) {
+    room = room.replace('/', '');
+    socket.broadcast.to(room).emit('presence', {
+        user: users[socket.id],
+        state: state,
+        room: room
+    })
+}
+
+function createUserId() {
+    return uid();
+}
 
 function disconnect(socket, data) {
     var rooms = io.sockets.manager.roomClients[socket.id];
@@ -104,8 +174,9 @@ function ready(socket, data) {
     });
 
     console.log('users: ', users);
-    
 
+
+    socket.join('general');
     // immediately join general channel
     // join(socket, {
     //     room: 'general'
@@ -116,26 +187,6 @@ function ready(socket, data) {
     //     rooms: getRooms()
     // });
 }
-
-// function connect(socket, data){
-//     // generate user id
-//     data.userId = uid();
-
-//     // compile users on individual thread
-//     users[socket.id] = data;
-
-//     // ready (push user id id)
-//     socket.emit('ready', { 
-//         userId: data.userId 
-//     });
-
-//     // immediately join general channel
-//     join(socket, { room: 'general' })
-
-//     // get list of rooms
-//     socket.emit('roomslist', { rooms: getRooms() });
-
-// }
 
 // chat message function 
 
@@ -154,6 +205,10 @@ function isTyping(socket, data){
 // get rooms function
 
 function getRooms(){
+    if (io.sockets.adapter && io.sockets.adapter.rooms) {
+        console.log('io.sockets.adapter.rooms: ', io.sockets.adapter.rooms);
+    }
+
     return io.sockets.adapter && io.sockets.adapter.rooms ? Object.keys(io.sockets.adapter.rooms) : false;
 }
 

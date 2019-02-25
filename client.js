@@ -43,8 +43,8 @@ function bindDOMEvents(){
         handleMessage();
     })
 
-    $('#room-list ul').on('scroll', function(){
-        $('#room-list ul li.selected').css('top', $(this).scrollTop());
+    $('#room-list').on('scroll', function(){
+        $('#room-list li.selected').css('top', $(this).scrollTop());
     })
 
     $('#messages-log ul').on('scroll', function(){
@@ -59,7 +59,7 @@ function bindDOMEvents(){
         }, 50);
     });
 
-    $('#room-list ul li').on('click', function(){
+    $('#room-list li').on('click', function(){
         console.log('clicking on room');
         var room = $(this).attr('data-roomId');
         if(room != currentRoom){
@@ -153,10 +153,8 @@ function updateUsers(usernames){
     });
 }  
 
-// TYPING TYPING TYPING TYPING TYPING TYPING TYPING TYPING
+// TYPING 
 // ---------------------------------------
-
-
 function handleUsertyping(recv){
     var userId = recv.userId;
     var main = $('#messages-log' + userId);
@@ -171,7 +169,6 @@ function handleUsertyping(recv){
 }
 
 function handleChatEvents(id, user){
-
     $('#messages-log' + id).dialog({
         open: function(event, ui){
             var main = $('#messages-log' + userId);
@@ -299,7 +296,7 @@ function createRoom(){
         '</li>'
     ]
 
-    var createRoomPopUp = swal({
+    swal({
         title: "name your chatroom", 
         type: "input",
         showCancelButton: true,
@@ -367,6 +364,12 @@ $(function(){
 
     socket.on('connect', connect);
     bindDOMEvents();
+
+    socket.on('typing', (data) => {
+        var feed = $('#typing');
+        feed.append("<p><i>" + data.name + " is typing a message..." + "</i></p>")
+    })
+
     main.parent().find('#isTyping').first().addClass('no-display');
 
     socket.on('appendUser', function(data) {
@@ -382,6 +385,7 @@ $(function(){
     })
 
     socket.on('roomslist', function(data){
+        chatter.debug.rooms = data.rooms;
         for (var i = 0, len = data.rooms.length; i < len; i++){
             if (data.rooms[i] !== ''){
                 createRoom(data.rooms[i], false);
