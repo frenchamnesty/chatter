@@ -29,15 +29,6 @@ app.get('/', function(req, res){
 // ON CONNECTION >>>>>>>>>>>>>>>
 
 io.on('connection', function (socket) {
-    // autojoin general room
-    // socket.on('connect', function(data) {
-    //     connect(socket, data);
-    // })
-
-    // socket.on('subscribe', function(data) {
-    //     subscribe(socket, data);
-    // })
-
     socket.on('ready', function(data) {
         console.log('user created, ready fired: ', data);
         ready(socket, data);
@@ -76,71 +67,6 @@ io.on('connection', function (socket) {
     // });
 
 });
-
-function connect(socket, data) {
-    data.userId = createUserId();
-    users[socket.id] = data;
-    socket.emit('isReady', {
-        userId: data.userId
-    });
-
-    console.log('users: ', users);
-
-    subscribe(socket, {
-        room: 'general'
-    });
-
-    socket.emit('rooms', {
-        rooms: getRoomsList()
-    });
-}
-
-// function subscribe(socket, data) {
-//     var rooms = getRoomsList();
-
-//     if (rooms.indexOf('/' + data.room) < 0) {
-//         socket.broadcast.emit('createRoom', {
-//             room: data.room
-//         })
-//     }
-
-//     socket.join(data.room);
-
-//     updatePresence(data.room, socket, 'online')
-
-//     socket.emit('roomUsers', {
-//         room: data.room,
-//         users: getUsersInRoom(socket.id, data.room)
-//     })
-// }
-
-function getRoomsList() {
-    return Object.keys(io.sockets.manager.rooms);
-}
-
-function getUsersInRoom(socketId, room) {
-    var socketIds = io.sockets.manager.rooms['/' + room];
-    var usersIds = [];
-
-    if (socketIds && socketIds.length > 0) {
-        for (var i = 0; i < socketIds.length; i ++) {
-            if (socketIds[i] !== socketId) {
-                usersIds.push(users[socketIds[i]])
-            }
-        }
-    }
-
-    return userIds;
-}
-
-function updatePresence(room, socket, state) {
-    room = room.replace('/', '');
-    socket.broadcast.to(room).emit('presence', {
-        user: users[socket.id],
-        state: state,
-        room: room
-    })
-}
 
 function createUserId() {
     return uid();
