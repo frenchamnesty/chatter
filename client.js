@@ -118,25 +118,11 @@ function addUser(data){
         }
 
         inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-         swal("all set!", "welcome " + inputValue + ', let the chatter begin');
-
-        username = inputValue
+        swal("all set!", "welcome " + inputValue + ', let the chatter begin');
         
-        socket.emit('ready', {username: username});
-
-        // socket.emit('ready', function(data){
-        //     data = {
-        //         userId: data.userId,
-        //         username: data.username 
-        //     },
-
-        //     $('#log').animate({ 'opacity': 0}, 200, function(){
-        //         $(this).hide();
-        //         $('#m').focus();
-        //     })
-
-        //     userId = data.userId;
-        // })
+        socket.emit('ready', {
+            username: inputValue
+        });
 
         $('#log').animate({
             'opacity': 0
@@ -144,14 +130,10 @@ function addUser(data){
             $(this).hide();
             $('#m').focus();
         })
-
-        // $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + userId + '>' + username + '</li>' );
-
      });
 }
 
 function appendUser(data) {
-    console.log('append user');
     chatter.debug.users = data.users;
     $('#user-list').append('<span id="#online" class="statusIndicator"></span><li class="username" key=' + data.userId + '>' + data.username + '</li>');
 }

@@ -29,32 +29,22 @@ app.get('/', function(req, res){
 // user channels obj
 //var chatterUsers = {};
 
-function disconnect(socket, data) {
-    var rooms = io.sockets.manager.roomClients[socket.id];
-
-    for(var room in rooms){
-        if(room && rooms[room]){
-            leaveRoom(socket, { room: room.replace('/','')});
-        }
-    }
-    delete usernames[socket.id]
-}
-
 // ON CONNECTION >>>>>>>>>>>>>>>
 
-io.on('connection', function(socket){ 
-    console.log('on connection');
+io.on('connection', function (socket) {
+    socket.join('general');
+    console.log('socket: ', socket);
 
     socket.on('ready', function(data) {
-        console.log('ready fired');
+        console.log('user created, ready fired: ', data);
         ready(socket, data);
     });
     
     // CONNECT
-   socket.on('connect', function(data){
-       console.log('on connect: ', data);
-        connect(socket, data);
-    });
+//    socket.on('connect', function(data){
+//        console.log('on connect: ', data);
+//         connect(socket, data);
+//     });
 
     // CHATMESSAGE
     socket.on('chatmessage', function(data){
@@ -75,12 +65,29 @@ io.on('connection', function(socket){
        leaveRoom(socket, data);
    });
 
+    socket.on('disconnect', function () {
+        console.log('user disconnected');
+    })
+
     // DISCONNECT
     // socket.on('disconnect', function(data){
     //     disconnect(socket, data);
     // });
 
 });
+
+function disconnect(socket, data) {
+    var rooms = io.sockets.manager.roomClients[socket.id];
+
+    for (var room in rooms) {
+        if (room && rooms[room]) {
+            leaveRoom(socket, {
+                room: room.replace('/', '')
+            });
+        }
+    }
+    delete usernames[socket.id]
+}
 
 // connect function
 
@@ -96,16 +103,18 @@ function ready(socket, data) {
         users: users
     });
 
+    console.log('users: ', users);
+    
+
     // immediately join general channel
-    join(socket, {
-        room: 'general'
-    })
+    // join(socket, {
+    //     room: 'general'
+    // })
 
     // get list of rooms
-    socket.emit('roomslist', {
-        rooms: getRooms()
-    });
-
+    // socket.emit('roomslist', {
+    //     rooms: getRooms()
+    // });
 }
 
 // function connect(socket, data){
