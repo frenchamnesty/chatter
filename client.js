@@ -161,39 +161,13 @@ function handleMessage(){
     }
 }
 
-// add message to logs
-function addMessage(sender, message, showTime, isSelf){
-    var html = [
-				'<li>',
-					'<span id="sender">${sender} </span>[<span class="fr time">${time}</span>]: <span class="fl text">${text}</span>',
-				'</li>'
-			].join("");
-
-    var $msgTemplate = $.tmpl(html, {
-        sender: sender,
-        text: message,
-        time: showTime ? getTime() : ''
-    })
-
-    if(isSelf){
-        $('#messages-log ul').addClass('message-sender');
-
-        console.log('is self?');
-    }
-
-    $('#messages-log ul').append($msgTemplate);
-    $('#messages-log').animate({ scrollTop: $('.messages-log ul').height() }, 100);
-}
-
 // ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS
 // ---------------------------------------
 
 function setCurrentRoom(room){
     console.log('set current room');
     currentRoom = room;
-
     $('.rooms-container ul li.selected').removeClass('selected');
-
     $('.rooms-container ul li[data-roomId="' + room + '"]').addClass('selected');
 }
 
@@ -272,22 +246,6 @@ function createRoom(){
     })
 
 }
-
-
-
-// SOCKET ON - SOCKET ON - SOCKET ON
-// ----------------------------------------
-
-
-function connect(){
-    connected = true;
-    chatter.connected = connected;
-    addUser();
-}
-
-
-
-
 // notes: 
 
 // ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react
@@ -295,7 +253,6 @@ $(function(){
     window.chatter = {};
     var chatter = window.chatter;
     var currentRoom = null;
-    var currentUser;
     var local;
     var socket;
 
@@ -346,7 +303,6 @@ $(function(){
 
             for (var id in usersOnline) {
                 var userMetaData = usersOnline[id]
-                currentUser = userMetaData;
 
                 $('#user-list').append('<div class="username" uid="' + userMetaData.uid + '"><i class="fa fa-user" aria-hidden="true"></i>' + userMetaData.name + '</div>');
             }
@@ -403,7 +359,9 @@ $(function(){
         }, function(data) {
             var received = JSON.parse(data);
 
-            console.log('received on join chat: ', received);
+            if (received.join === 'successful') {
+                chatter.currentUser = received.config;
+            }
         })
     }
 
@@ -424,7 +382,7 @@ $(function(){
 
     function handleMessage() {
         var message = $('.chat-input input').val().trim();
-        var username = currentUser.name;
+        var username = chatter.currentUser.name;
 
         if (message) {
             socket.emit('message', {
@@ -432,13 +390,35 @@ $(function(){
                 'message': message
             });
 
-            console.log('handle message should go through, msg: ' + message);
-
             addMessage(username, message, true, true);
             $('.chat-input input').val('');
         } else {
             console.log('chat did not go through');
         }
+    }
+
+    // add message to chat window
+    function addMessage(sender, message, showTime, isSelf) {
+        var html = [
+            '<li>',
+            '<span id="sender">${sender} </span>[<span class="fr time">${time}</span>]: <span class="fl text">${text}</span>',
+            '</li>'
+        ].join("");
+
+        var $msgTemplate = $.tmpl(html, {
+            sender: sender,
+            text: message,
+            time: showTime ? getTime() : ''
+        })
+
+        if (isSelf) {
+            $('#messages-log ul').addClass('message-sender');
+        }
+
+        $('#messages-log ul').append($msgTemplate);
+        $('#messages-log').animate({
+            scrollTop: $('.messages-log ul').height()
+        }, 100);
     }
 
     socketConnect();

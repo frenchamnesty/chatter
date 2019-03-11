@@ -60,6 +60,15 @@ io.on('connection', function (socket) {
             'action': 'mainChat',
             'user': users[socket.user]
         }))
+
+        if (typeof fn !== 'undefined') {
+            fn(JSON.stringify(
+                {
+                    'join': 'successful',
+                    'config': users[socket.user]
+                }
+            ))
+        }
     });
 
     socket.on('message', function(recv, fn) {
