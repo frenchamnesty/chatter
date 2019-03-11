@@ -340,7 +340,7 @@ $(function(){
                 socket.emit('usertyping', {
                     'user': user
                 })
-            }, 100)
+            }, 400)
         }
     }
 
