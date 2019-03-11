@@ -44,6 +44,7 @@ $(function(){
             for (var id in usersOnline) {
                 var userMetaData = usersOnline[id]
 
+                // add status indicator
                 $('#user-list').append('<div class="username" uid="' + userMetaData.uid + '"><i class="fa fa-user" aria-hidden="true"></i>' + userMetaData.name + '</div>');
 
                 // $('#user-list').append('<span id="online" class="statusIndicator"></span><li class="username" key=' + userMetaData.uid + '>' + userMetaData.name + '</li>');
