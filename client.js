@@ -136,31 +136,6 @@ function call_user_is_typing(user){
     socket.emit('user_typing', { 'user': user })
 }
 
-// MESSAGE MESSAGE MESSAGE MESSAGE MESSAGE 
-// ---------------------------------------
-
-// handle message input
-function handleMessage(){
-    var message = $('.chat-input input').val().trim();
-    console.log('handle messsage is firing');
-
-    if(message){
-
-        socket.emit('message', {
-            message: message
-        });
-        
-        console.log('handle message should go through, msg: ' + message);
-                    
-        addMessage(username, message, true, true);
-        
-        $('.chat-input input').val('');
-    
-    } else {
-        console.log('chat did not go through');
-    }
-}
-
 // ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS
 // ---------------------------------------
 
@@ -309,11 +284,13 @@ $(function(){
         }
 
         if (action === 'message') {
-            var date = recv.date;
             var id = recv.data.user.uid;
-            var name = recv.data.user.name;
-            var status = recv.data.user.status;
+            var username = recv.data.user.name;
             var msg = recv.data.msg;
+
+            addMessage(username, msg, true, true);
+
+            // TODO: do alerts?/notifications?
         }
     }
 
@@ -388,10 +365,15 @@ $(function(){
             socket.emit('message', {
                 'user': username,
                 'message': message
-            });
+            }, function(data) {
+                var received = JSON.parse(data);
 
-            addMessage(username, message, true, true);
-            $('.chat-input input').val('');
+                if (received.success) {
+                    $('.chat-input input').val('');
+                } else {
+                    console.log('there was an error with the chat going through');
+                }
+            });
         } else {
             console.log('chat did not go through');
         }

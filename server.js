@@ -74,14 +74,15 @@ io.on('connection', function (socket) {
     socket.on('message', function(recv, fn) {
         var date = new Date();
         var id = rooms[recv.uid].socket.id;
+        console.log('on message: ', recv);
         var msg = {
-            'msg': recv.msg,
+            'msg': recv.message,
             'user': users[socket.user]
         }
 
         if (typeof fn !== 'undefined') {
             fn(JSON.stringify({
-                'ack': true,
+                'success': true,
                 'date': date
             }))
         }
