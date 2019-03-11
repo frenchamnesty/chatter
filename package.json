@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/frenchamnesty/chatter#readme",
   "dependencies": {
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^3.4.1",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "moment": "^2.24.0",
