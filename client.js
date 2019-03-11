@@ -259,15 +259,8 @@ $(function(){
     }
 
     function handleChatMessage(recv) {
-        console.log('recv: ', recv);
-
         var action = recv.action;
         console.log('action: ', action);
-
-        if (action === 'mainChat'){
-            console.log('main chat window');
-            // go to main chat room
-        }
 
         if (action === 'userList'){
             var usersOnline = recv.users;
@@ -292,6 +285,21 @@ $(function(){
 
             // TODO: do alerts?/notifications?
         }
+
+        if (action === 'usertyping') {
+            handleIsTypingIndicator(recv);
+        }
+    }
+
+    function handleIsTypingIndicator(recv) {
+        console.log('recv: ', recv);
+        var username = recv.data.name;
+
+        $('li#isTyping').text(`${username} is typing...`).removeClass('isTyping');
+
+        setTimeout(function() {
+            $('li#isTyping').addClass('isTyping');
+        }, 2000);
     }
 
     function addNewUser(data) {
@@ -343,8 +351,19 @@ $(function(){
     }
 
     function bindChatterDOMEvents(){
+        var html = [
+            '<li class="isTyping isTypingVisible" id="isTyping">',
+            '<span id="typing-user" class="fl text"></span>',
+            '</li>'
+        ].join("");
+
+        var $typingTemplate = $.tmpl(html, {
+            username: 'null'
+        })
+
+        $('#messages-log ul').append($typingTemplate);
+
         $('.chat-input input').on('keydown', function (e) {
-            // handleUsertyping(e);
             var key = e.which || e.keyCode;
 
             if (key == 13) {
@@ -355,6 +374,24 @@ $(function(){
         $('.chat-submit button').on('click', function (e) {
             handleMessage();
         })
+
+        $('input#chat-input').keyup(function(e) {
+            showUserIsTyping(chatter.currentUser)
+        })
+    }
+    
+    function showUserIsTyping(user){
+        var isTypingTimeout;
+
+        if (!!isTypingTimeout) {
+            clearTimeout(isTypingTimeout);
+        } else {
+            isTypingTimeout = setTimeout(function () {
+                socket.emit('usertyping', {
+                    'user': user
+                })
+            }, 100)
+        }
     }
 
     function handleMessage() {

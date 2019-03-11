@@ -177,3 +177,11 @@ li#online.room {
 .offline {
     color: red;
 }
+
+.isTyping {
+    visibility: hidden;
+}
+
+.isTypingVisible {
+    color: red;
+}

@@ -94,6 +94,16 @@ io.on('connection', function (socket) {
         }))
     })
 
+    socket.on('usertyping', function(recv) {
+        var id = rooms[recv.uid].socket.id;
+        io.sockets.connected[id].emit('chat', JSON.stringify(
+            {
+                'action': 'usertyping',
+                'data': users[socket.user]
+            }
+        ))
+    })
+
     // socket.on('ready', function(data) {
     //     console.log('user created, ready fired: ', data);
     //     ready(socket, data);
