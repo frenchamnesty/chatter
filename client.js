@@ -1,16 +1,16 @@
 // GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL
 // ---------------------------------------
-window.chatter = {};
-let chatter = window.chatter;
+// window.chatter = {};
+// let chatter = window.chatter;
 
-var socket = io.connect('http://localhost:3000');
-var userId = null;
-var username = null;
-var currentRoom = null;
-var roomId = null;
-var room = null;
-var serverDisplayName = 'Server';
-var local;
+// var socket = io.connect('http://localhost:3000');
+// var userId = null;
+// var username = null;
+// var currentRoom = null;
+// var roomId = null;
+// var room = null;
+// var serverDisplayName = 'Server';
+// var local;
 
 try {
     local = 'localStorage' in window && window['localStorage'] !== null;
@@ -350,133 +350,275 @@ function connect(){
 // notes: 
 
 // ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react
-
-
 $(function(){
-    chatter.debug = {};
+    window.chatter = {};
+    let chatter = window.chatter;
 
-    var connected = false;
-    var typing = false;
-    var lastTypingTime;
-    var lastMentionedUser = '';
-    var lastMentionedId = 0;
-    var main = $(this);
+    // var socket = io.connect('http://localhost:3000');
+    var userId = null;
+    var username = null;
+    var currentRoom = null;
+    var roomId = null;
+    var room = null;
+    var serverDisplayName = 'Server';
+    var local;
+    var socket;
+    var username;
 
-    socket.on('connect', connect);
-    bindDOMEvents();
+    chatter.debug = {}
 
-    socket.on('typing', (data) => {
-        var feed = $('#typing');
-        feed.append("<p><i>" + data.name + " is typing a message..." + "</i></p>")
-    })
+    try {
+        local = 'localStorage' in window && window['localStorage'] !== null;
+    } catch (e) {
+        local = false;
+    }
 
-    main.parent().find('#isTyping').first().addClass('no-display');
+    function socketConnect() {
+        socket = io.connect('http://localhost:3000');
 
-    socket.on('appendUser', function(data) {
-        appendUser(data);
-    })
+    }
 
-    socket.on('presence', function(data){
-        if(data.state === 'online'){
-            addUserToRoom(data.user, true);
-        } else if (data.state === 'offline'){
-            removeUser(data.user, true);
+    function socketHandle(){
+        socket.on('connect', function (data) {
+            chatter.connected = true;
+            console.log('connected!');
+            addNewUser();
+            return;
+        })
+
+        socket.on('chat', function(recv) {
+            var msg = JSON.parse(recv);
+            console.log('msg: ', msg);
+            handleChatMessage(msg);
+        })
+    }
+
+    function handleChatMessage(recv) {
+        console.log('recv: ', recv);
+
+        var action = recv.action;
+        console.log('action: ', action);
+
+        if (action === 'mainChat'){
+            console.log('main chat window');
+            // go to main chat room
         }
-    })
 
-    socket.on('roomslist', function(data){
-        chatter.debug.rooms = data.rooms;
-        for (var i = 0, len = data.rooms.length; i < len; i++){
-            if (data.rooms[i] !== ''){
-                createRoom(data.rooms[i], false);
+        if (action === 'userList'){
+            // $('#user-list').empty();
+            var usersOnline = recv.users;
+            console.log('usersOnline: ', usersOnline);
+            var numberOfUsers = recv.count;
+
+            console.log('load the user list');
+            console.log('numberOfUsers: ', numberOfUsers);
+
+            $('.onlineNum').text(numberOfUsers);
+
+            for (var id in usersOnline) {
+                console.log('onlineUser: ', usersOnline[id]);
+                var userMetaData = usersOnline[id]
+
+                $('#user-list').append('<div class="username" uid="' + userMetaData.uid + '"><i class="fa fa-user" aria-hidden="true"></i>' + userMetaData.name + '</div>');
             }
         }
-    })
 
-    socket.on('roomUsers', function(data){
-        console.log('roomUsers');
-        createRoom(data.room, false);
-        setCurrentRoom(data.room);
-
-        addUserToRoom({ username: username, userId: userId }, false, true );
-
-        for(var i = 0, len = data.users.length; i < len; i++){
-            if (data.users[i]){
-                addUserToRoom(data.users[i], false)
-            }
+        if (action === 'message') {
+            var date = recv.date;
+            var id = recv.data.user.id;
+            var name = recv.data.user.name;
+            var status = recv.data.user.status;
+            var msg = recv.data.msg;
         }
-    })
 
-    socket.on('createroom', function(data){
-        createRoom(data.room, true);
-    });
+        // if (action === 'message') {
+        //     var id = recv.data.user.
+        // }
 
-    socket.on('deleteroom', function(data){
-        deleteRoom(data.room, true);
-    })
-
-    function changeStatus(status){
-        if(status === -1){
-            $('.statusIndicator').addClass('offline').removeClass('connecting');
-        } else if (status === 0) {
-            $('.statusIndicator').removeClass('offline').addClass('connecting');
-        } else if (status === 1){
-            $('.statusIndicator').removeClass('offline').removeClass('connecting');
-        }
+        // if (action === 'message') {
+        //     var date = recv.date;
+        //     var userId = recv.data.user.id;
+        //     var name = recv.data.user.name;
+        //     var status = recv.data.user.status;
+        //     var msg = recv.data.msg;
+        // }
     }
 
-    function updateUsersOnlineList(data, action){
-        if (data.userCount !== undefined){
-            var num = parseInt(data.userCount);
+    function addNewUser(data) {
+        swal({
+            title: "what's your username?",
+            type: "input",
+            showCancelButton: false,
+            closeOnConfirm: false,
+            animation: "slide-from-top",
+            inputPlaceholder: "enter name here"
+        }, function (inputValue) {
+            if (inputValue === false) return false;
 
-            $('.onlineNum').text(num);
-        }
-    }
-
-    function sendMessage(){
-        var message = $('.chat-input input').val();
-
-        if (message && connected){
-            $('.chat-input').val('');
-
-            socket.emit('chatmessage', {
-                text: message,
-                replyId: lastMentionId
-            });
-
-            lastMentionedId = 0;
-            lastMentionedUser = "";
-        }
-    }
-
-    function addChatTyping(data){
-        addMessageElement(messageTypingTempalte(data))
-    }
-
-    function removeChatTyping(data){
-        $('#isTyping' + data.user.id).remove();
-    }
-
-    function updateTyping() {
-        return false;
-        
-        if (connected) {
-
-            if (!typing) {
-                typing = true;
-                socket.emit('typing');
+            if (inputValue === "") {
+                swal.showInputError("enter a valid username");
+                return false;
             }
 
-            lastTypingTime = (new Date()).getTime();
+            if (inputValue.length <= 3) {
+                swal.showInputError("username must be at least 4 characters");
+                return false;
+            }
 
-            setTimeout(function() {
-                var typingTimer = (new Date()).getTime();
-                var timeDiff = typingTimer - lastTypingTime;
-                if (timeDiff >= 500 && typing) {
-                socket.emit('stop typing');
-                typing = false;
-                }
-            }, 500);
-        }
+            inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
+            swal("all set!", "welcome " + inputValue + ', let the chatter begin');
+
+            joinChat(inputValue);
+
+            $('#log').animate({
+                'opacity': 0
+            }, 200, function () {
+                $(this).hide();
+                $('#m').focus();
+            })
+        });
     }
+
+    function joinChat(username){
+        socket.emit('join', {
+            'id': null, 
+            'name': username
+        }, function(data) {
+            var received = JSON.parse(data);
+
+            console.log('received: ', received);
+        })
+    }
+
+    socketConnect();
+    socketHandle();
 })
+
+// $(function(){
+//     chatter.debug = {};
+
+//     var connected = false;
+//     var typing = false;
+//     var lastTypingTime;
+//     var lastMentionedUser = '';
+//     var lastMentionedId = 0;
+//     var main = $(this);
+
+//     socket.on('connect', connect);
+//     bindDOMEvents();
+
+//     socket.on('typing', (data) => {
+//         var feed = $('#typing');
+//         feed.append("<p><i>" + data.name + " is typing a message..." + "</i></p>")
+//     })
+
+//     main.parent().find('#isTyping').first().addClass('no-display');
+
+//     socket.on('appendUser', function(data) {
+//         appendUser(data);
+//     })
+
+//     socket.on('presence', function(data){
+//         if(data.state === 'online'){
+//             addUserToRoom(data.user, true);
+//         } else if (data.state === 'offline'){
+//             removeUser(data.user, true);
+//         }
+//     })
+
+//     socket.on('roomslist', function(data){
+//         chatter.debug.rooms = data.rooms;
+//         for (var i = 0, len = data.rooms.length; i < len; i++){
+//             if (data.rooms[i] !== ''){
+//                 createRoom(data.rooms[i], false);
+//             }
+//         }
+//     })
+
+//     socket.on('roomUsers', function(data){
+//         console.log('roomUsers');
+//         createRoom(data.room, false);
+//         setCurrentRoom(data.room);
+
+//         addUserToRoom({ username: username, userId: userId }, false, true );
+
+//         for(var i = 0, len = data.users.length; i < len; i++){
+//             if (data.users[i]){
+//                 addUserToRoom(data.users[i], false)
+//             }
+//         }
+//     })
+
+//     socket.on('createroom', function(data){
+//         createRoom(data.room, true);
+//     });
+
+//     socket.on('deleteroom', function(data){
+//         deleteRoom(data.room, true);
+//     })
+
+//     function changeStatus(status){
+//         if(status === -1){
+//             $('.statusIndicator').addClass('offline').removeClass('connecting');
+//         } else if (status === 0) {
+//             $('.statusIndicator').removeClass('offline').addClass('connecting');
+//         } else if (status === 1){
+//             $('.statusIndicator').removeClass('offline').removeClass('connecting');
+//         }
+//     }
+
+//     function updateUsersOnlineList(data, action){
+//         if (data.userCount !== undefined){
+//             var num = parseInt(data.userCount);
+
+//             $('.onlineNum').text(num);
+//         }
+//     }
+
+//     function sendMessage(){
+//         var message = $('.chat-input input').val();
+
+//         if (message && connected){
+//             $('.chat-input').val('');
+
+//             socket.emit('chatmessage', {
+//                 text: message,
+//                 replyId: lastMentionId
+//             });
+
+//             lastMentionedId = 0;
+//             lastMentionedUser = "";
+//         }
+//     }
+
+//     function addChatTyping(data){
+//         addMessageElement(messageTypingTempalte(data))
+//     }
+
+//     function removeChatTyping(data){
+//         $('#isTyping' + data.user.id).remove();
+//     }
+
+//     function updateTyping() {
+//         return false;
+        
+//         if (connected) {
+
+//             if (!typing) {
+//                 typing = true;
+//                 socket.emit('typing');
+//             }
+
+//             lastTypingTime = (new Date()).getTime();
+
+//             setTimeout(function() {
+//                 var typingTimer = (new Date()).getTime();
+//                 var timeDiff = typingTimer - lastTypingTime;
+//                 if (timeDiff >= 500 && typing) {
+//                 socket.emit('stop typing');
+//                 typing = false;
+//                 }
+//             }, 500);
+//         }
+//     }
+// })

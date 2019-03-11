@@ -15,7 +15,8 @@ var rooms = {};
 
 // server
 server.listen(port, function(){
-    console.log(`server connection estabslihed on port: ${port}`);
+    var serverAddress = server.address().address;
+    console.log(`server connection on ${serverAddress} established on port ${port}`);
 });
 
 // directories
@@ -29,15 +30,49 @@ app.get('/', function(req, res){
 // ON CONNECTION >>>>>>>>>>>>>>>
 
 io.on('connection', function (socket) {
-    socket.on('ready', function(data) {
-        console.log('user created, ready fired: ', data);
-        ready(socket, data);
-    });
+    socket.on('join', function(recv, fn) {
+        console.log('SERVER JOIN: ', recv)
+        
+        if (recv.id == null && recv.name) {
+            recv.id = uid()
+        }
+
+        socket.user = recv.id;
+        users[socket.user] = {
+            'uid': recv.id,
+            'name': recv.name,
+            'status': 'online'
+        }
+
+        rooms[socket.user] = {
+            'socket': socket
+        }
+
+        if (Object.keys(users).length > 0){
+            socket.emit('chat', JSON.stringify({
+                'action': 'userList',
+                'users': users,
+                'count': Object.keys(users).length
+            }))
+        }
+
+        console.log('users: ', users);
+
+        socket.broadcast.emit('chat', JSON.stringify({
+            'action': 'mainChat',
+            'user': users[socket.user]
+        }))
+    })
+
+    // socket.on('ready', function(data) {
+    //     console.log('user created, ready fired: ', data);
+    //     ready(socket, data);
+    // });
 
     // CHATMESSAGE
-    socket.on('chatmessage', function(data){
-        chatmessage(socket, data);
-    });
+    // socket.on('chatmessage', function(data){
+    //     chatmessage(socket, data);
+    // });
 
     // socket.on('isTyping', function(data){
     //     isTyping(socket, data);
@@ -57,9 +92,9 @@ io.on('connection', function (socket) {
 //        leaveRoom(socket, data);
 //    });
 
-    socket.on('disconnect', function () {
-        console.log('user disconnected');
-    })
+    // socket.on('disconnect', function () {
+    //     console.log('user disconnected');
+    // })
 
     // DISCONNECT
     // socket.on('disconnect', function(data){
