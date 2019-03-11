@@ -168,7 +168,6 @@ function createRoom(){
 $(function(){
     window.chatter = {};
     var chatter = window.chatter;
-    var currentRoom = null;
     var local;
     var socket;
 
@@ -194,7 +193,6 @@ $(function(){
 
         socket.on('chat', function(recv) {
             var msg = JSON.parse(recv);
-            console.log('msg: ', msg);
             handleChatMessage(msg);
         })
     }
@@ -229,7 +227,6 @@ $(function(){
         }
 
         if (action === 'usertyping') {
-            chatter.typing = true;
             handleIsTypingIndicator(recv);
         }
     }
@@ -343,6 +340,7 @@ $(function(){
             clearTimeout(isTypingTimeout);
         } else {
             isTypingTimeout = setTimeout(function () {
+                chatter.typing = true;
                 socket.emit('usertyping', {
                     'user': user
                 })
