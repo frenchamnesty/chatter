@@ -9,23 +9,6 @@ function setHeight(){
 
 // bind dom events to handler/etc functions
 function bindDOMEvents(){
-    $('.chat-input input').on('keydown', function(e){
-        handleUsertyping(e);
-        var key = e.which || e.keyCode;
-
-        if(key == 13) {
-            handleChatMessage();
-        }
-    })
-
-    $('.chat-submit button').on('click', function(){
-        handleChatMessage();
-    })
-
-    $('#room-list').on('scroll', function(){
-        $('#room-list li.selected').css('top', $(this).scrollTop());
-    })
-
     $('#messages-log ul').on('scroll', function(){
         var self = this;
 
@@ -92,48 +75,6 @@ function updateUsers(usernames){
     $.each(users, function(key, value){
         $('#user-list').append('<div class="username"><i class="fa fa-user" aria-hidden="true"></i> ' + key + '</div>');
     });
-}  
-
-// TYPING 
-// ---------------------------------------
-function handleUsertyping(recv){
-    var userId = recv.userId;
-    var main = $('#messages-log' + userId);
-    socket.emit('isTyping', { user: userId })
-    if (main.parent().find('#isTyping').first().hasClass('no-display')){
-        main.parent().find('#isTyping').first().removeClass('no-display');
-
-        setTimeout(function(){
-            main.parent().find('#isTyping').first().addClass('no-display');
-        }, 2000)
-    }
-}
-
-function handleChatEvents(id, user){
-    $('#messages-log' + id).dialog({
-        open: function(event, ui){
-            var main = $('#messages-log' + userId);
-            var username = main.data("username");
-
-            main.parent().find('#isTyping').first().addClass('no-display');
-
-
-            var typingTimeout;
-
-            main.find('#chat-input').first().keyup(function(e){
-                if(typingTimeout !== undefined) clearTimeout(typingTimeout);
-
-                typingTimeout = setTimeout(function(){
-                    call_user_is_typing(user)
-                }, 400);
-
-            })
-        }
-    })
-}
-
-function call_user_is_typing(user){
-    socket.emit('user_typing', { 'user': user })
 }
 
 // ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS ROOMS
@@ -277,6 +218,7 @@ $(function(){
         }
 
         if (action === 'message') {
+            chatter.typing = false;
             var id = recv.data.user.uid;
             var username = recv.data.user.name;
             var msg = recv.data.msg;
@@ -287,13 +229,17 @@ $(function(){
         }
 
         if (action === 'usertyping') {
+            chatter.typing = true;
             handleIsTypingIndicator(recv);
         }
     }
 
     function handleIsTypingIndicator(recv) {
-        console.log('recv: ', recv);
         var username = recv.data.name;
+
+        if (!chatter.typing) {
+            return;
+        }
 
         $('li#isTyping').text(`${username} is typing...`).removeClass('isTyping');
 
@@ -378,6 +324,10 @@ $(function(){
         $('input#chat-input').keyup(function(e) {
             showUserIsTyping(chatter.currentUser)
         })
+
+        $('#room-list').on('scroll', function () {
+            $('#room-list li.selected').css('top', $(this).scrollTop());
+        })
     }
     
     function showUserIsTyping(user){
@@ -447,29 +397,6 @@ $(function(){
 
 
 // $(function(){
-//     chatter.debug = {};
-
-//     var connected = false;
-//     var typing = false;
-//     var lastTypingTime;
-//     var lastMentionedUser = '';
-//     var lastMentionedId = 0;
-//     var main = $(this);
-
-//     socket.on('connect', connect);
-//     bindDOMEvents();
-
-//     socket.on('typing', (data) => {
-//         var feed = $('#typing');
-//         feed.append("<p><i>" + data.name + " is typing a message..." + "</i></p>")
-//     })
-
-//     main.parent().find('#isTyping').first().addClass('no-display');
-
-//     socket.on('appendUser', function(data) {
-//         appendUser(data);
-//     })
-
 //     socket.on('presence', function(data){
 //         if(data.state === 'online'){
 //             addUserToRoom(data.user, true);
@@ -525,30 +452,6 @@ $(function(){
 
 //             $('.onlineNum').text(num);
 //         }
-//     }
-
-//     function sendMessage(){
-//         var message = $('.chat-input input').val();
-
-//         if (message && connected){
-//             $('.chat-input').val('');
-
-//             socket.emit('chatmessage', {
-//                 text: message,
-//                 replyId: lastMentionId
-//             });
-
-//             lastMentionedId = 0;
-//             lastMentionedUser = "";
-//         }
-//     }
-
-//     function addChatTyping(data){
-//         addMessageElement(messageTypingTempalte(data))
-//     }
-
-//     function removeChatTyping(data){
-//         $('#isTyping' + data.user.id).remove();
 //     }
 
 //     function updateTyping() {
