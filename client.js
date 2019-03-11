@@ -413,7 +413,7 @@ $(function(){
             console.log('load the user list');
             console.log('numberOfUsers: ', numberOfUsers);
 
-            $('.onlineNum').text(numberOfUsers);
+            $('#users-online').text("(" + numberOfUsers + ")");
 
             for (var id in usersOnline) {
                 console.log('onlineUser: ', usersOnline[id]);
