@@ -244,6 +244,12 @@ $(function(){
         $('li#isTyping').text(`${username} is typing...`).removeClass('isTyping');
 
         setTimeout(function() {
+            // TODO: ANIMATION SOLUTION TO CHOPPINESS
+            // $('li#isTyping').animate({
+            //     'opacity': 0
+            // }, 100, function(){
+            //     $(this).addClass('isTyping');
+            // })
             $('li#isTyping').addClass('isTyping');
         }, 2000);
     }
