@@ -33,13 +33,13 @@ io.on('connection', function (socket) {
     socket.on('join', function(recv, fn) {
         console.log('SERVER JOIN: ', recv)
         
-        if (recv.id == null && recv.name) {
-            recv.id = uid()
+        if (recv.uid == null && recv.name) {
+            recv.uid = uid()
         }
 
         socket.user = recv.id;
         users[socket.user] = {
-            'uid': recv.id,
+            'uid': recv.uid,
             'name': recv.name,
             'status': 'online'
         }
@@ -56,11 +56,31 @@ io.on('connection', function (socket) {
             }))
         }
 
-        console.log('users: ', users);
-
         socket.broadcast.emit('chat', JSON.stringify({
             'action': 'mainChat',
             'user': users[socket.user]
+        }))
+    });
+
+    socket.on('message', function(recv, fn) {
+        var date = new Date();
+        var id = rooms[recv.uid].socket.id;
+        var msg = {
+            'msg': recv.msg,
+            'user': users[socket.user]
+        }
+
+        if (typeof fn !== 'undefined') {
+            fn(JSON.stringify({
+                'ack': true,
+                'date': date
+            }))
+        }
+
+        io.sockets.connected[id].emit('chat', JSON.stringify({
+            'action': 'message',
+            'data': msg,
+            'date': date
         }))
     })
 

@@ -1,25 +1,4 @@
-// GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL GLOBAL
-// ---------------------------------------
-// window.chatter = {};
-// let chatter = window.chatter;
-
-// var socket = io.connect('http://localhost:3000');
-// var userId = null;
-// var username = null;
-// var currentRoom = null;
-// var roomId = null;
-// var room = null;
-// var serverDisplayName = 'Server';
-// var local;
-
-try {
-    local = 'localStorage' in window && window['localStorage'] !== null;
-} catch(e){
-    local = false;
-}
-
 // set chat window height
-
 function setHeight(){
     $('.slimScrollDiv').height('400');
     $('.slimScrollDiv').css('overflow', 'visible')
@@ -35,12 +14,12 @@ function bindDOMEvents(){
         var key = e.which || e.keyCode;
 
         if(key == 13) {
-            handleMessage();
+            handleChatMessage();
         }
     })
 
     $('.chat-submit button').on('click', function(){
-        handleMessage();
+        handleChatMessage();
     })
 
     $('#room-list').on('scroll', function(){
@@ -94,44 +73,6 @@ function getTime() {
 
 // USER USER USER USER USER USER USER USER
 // ---------------------------------------
-
-// add user 
-function addUser(data){
-    swal({
-        title: "what's your username?",
-        type: "input",
-        showCancelButton: false,
-        closeOnConfirm: false,
-        animation: "slide-from-top",
-        inputPlaceholder: "enter name here"
-    }, function(inputValue){
-        if (inputValue === false) return false;
-
-        if(inputValue === ""){
-            swal.showInputError("enter a valid username");
-            return false;
-        }
-
-        if(inputValue.length <= 3){
-            swal.showInputError("username must be at least 4 characters");
-            return false;
-        }
-
-        inputValue = inputValue.replace(/<(?:.|\n)*?>/gm, '');
-        swal("all set!", "welcome " + inputValue + ', let the chatter begin');
-        
-        socket.emit('ready', {
-            username: inputValue
-        });
-
-        $('#log').animate({
-            'opacity': 0
-        }, 200, function () {
-            $(this).hide();
-            $('#m').focus();
-        })
-     });
-}
 
 function appendUser(data) {
     chatter.debug.users = data.users;
@@ -205,7 +146,7 @@ function handleMessage(){
 
     if(message){
 
-        socket.emit('chatmessage', {
+        socket.emit('message', {
             message: message
         });
         
@@ -352,18 +293,11 @@ function connect(){
 // ENABLE USERNAME INPUT ONLY IF USER HAS BEEN SUBMITTED FOR THE CHAT, possible solution for the other app using react
 $(function(){
     window.chatter = {};
-    let chatter = window.chatter;
-
-    // var socket = io.connect('http://localhost:3000');
-    var userId = null;
-    var username = null;
+    var chatter = window.chatter;
     var currentRoom = null;
-    var roomId = null;
-    var room = null;
-    var serverDisplayName = 'Server';
+    var currentUser;
     var local;
     var socket;
-    var username;
 
     chatter.debug = {}
 
@@ -375,7 +309,6 @@ $(function(){
 
     function socketConnect() {
         socket = io.connect('http://localhost:3000');
-
     }
 
     function socketHandle(){
@@ -405,19 +338,15 @@ $(function(){
         }
 
         if (action === 'userList'){
-            // $('#user-list').empty();
             var usersOnline = recv.users;
-            console.log('usersOnline: ', usersOnline);
             var numberOfUsers = recv.count;
 
-            console.log('load the user list');
-            console.log('numberOfUsers: ', numberOfUsers);
-
             $('#users-online').text("(" + numberOfUsers + ")");
+            $('#user-list').empty();
 
             for (var id in usersOnline) {
-                console.log('onlineUser: ', usersOnline[id]);
                 var userMetaData = usersOnline[id]
+                currentUser = userMetaData;
 
                 $('#user-list').append('<div class="username" uid="' + userMetaData.uid + '"><i class="fa fa-user" aria-hidden="true"></i>' + userMetaData.name + '</div>');
             }
@@ -425,23 +354,11 @@ $(function(){
 
         if (action === 'message') {
             var date = recv.date;
-            var id = recv.data.user.id;
+            var id = recv.data.user.uid;
             var name = recv.data.user.name;
             var status = recv.data.user.status;
             var msg = recv.data.msg;
         }
-
-        // if (action === 'message') {
-        //     var id = recv.data.user.
-        // }
-
-        // if (action === 'message') {
-        //     var date = recv.date;
-        //     var userId = recv.data.user.id;
-        //     var name = recv.data.user.name;
-        //     var status = recv.data.user.status;
-        //     var msg = recv.data.msg;
-        // }
     }
 
     function addNewUser(data) {
@@ -481,18 +398,54 @@ $(function(){
 
     function joinChat(username){
         socket.emit('join', {
-            'id': null, 
+            'uid': null, 
             'name': username
         }, function(data) {
             var received = JSON.parse(data);
 
-            console.log('received: ', received);
+            console.log('received on join chat: ', received);
         })
+    }
+
+    function bindChatterDOMEvents(){
+        $('.chat-input input').on('keydown', function (e) {
+            // handleUsertyping(e);
+            var key = e.which || e.keyCode;
+
+            if (key == 13) {
+                handleMessage();
+            }
+        })
+
+        $('.chat-submit button').on('click', function (e) {
+            handleMessage();
+        })
+    }
+
+    function handleMessage() {
+        var message = $('.chat-input input').val().trim();
+        var username = currentUser.name;
+
+        if (message) {
+            socket.emit('message', {
+                'user': username,
+                'message': message
+            });
+
+            console.log('handle message should go through, msg: ' + message);
+
+            addMessage(username, message, true, true);
+            $('.chat-input input').val('');
+        } else {
+            console.log('chat did not go through');
+        }
     }
 
     socketConnect();
     socketHandle();
+    bindChatterDOMEvents()
 })
+
 
 // $(function(){
 //     chatter.debug = {};
