@@ -9,7 +9,7 @@
 1. `git clone https://github.com/frenchamnesty/chatter.git chatter`
 2. `cd chatter`
 3. `npm install`
-4. `npm run start`
+4. `npm run start` or if you want to run in dev mode, `npm run dev`
 
 ## CONTRIBUTE
 
